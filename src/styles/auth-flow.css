@@ -1,0 +1,176 @@
+.flow-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 26px 20px 28px;
+  background: radial-gradient(circle at top, #1d0b2c 0%, #0b0d14 45%, #050508 100%);
+  color: #f6f2ff;
+}
+
+.flow-header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.flow-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-group label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.85;
+}
+
+.field-group input,
+.field-group select {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #f6f2ff;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.field-group input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.field-group select {
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="%23f6f2ff"><path d="M8 10l-4-4h8z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.helper-text {
+  font-size: 13px;
+  opacity: 0.75;
+  margin: 0;
+}
+
+.timer-text {
+  font-size: 12px;
+  opacity: 0.7;
+  margin: 0;
+  text-align: center;
+}
+
+.count-text {
+  font-size: 12px;
+  opacity: 0.75;
+  margin: 0;
+  text-align: center;
+}
+
+.sub-text {
+  font-size: 12px;
+  opacity: 0.7;
+  margin: 4px 0 8px;
+}
+
+.error-stack {
+  display: grid;
+  gap: 8px;
+}
+
+.error-text {
+  margin: 0;
+  font-size: 12px;
+  color: #ff9c9c;
+}
+
+.success-text {
+  margin: 0;
+  font-size: 12px;
+  color: #9cffc6;
+  text-align: center;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #ff2d55, #ff7a59);
+  border: none;
+  border-radius: 14px;
+  padding: 14px 16px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  transition: opacity 0.2s;
+}
+
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondary-button {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 14px;
+  padding: 12px 16px;
+  color: #f6f2ff;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.ghost-button {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f6f2ff;
+  padding: 12px 16px;
+  border-radius: 14px;
+  width: 100%;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Interest chips */
+.interest-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.interest-chip {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 10px 8px;
+  font-size: 12px;
+  color: #f6f2ff;
+  transition: all 0.2s;
+}
+
+.interest-chip.active {
+  background: linear-gradient(135deg, #ff2d55, #ff7a59);
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(255, 45, 85, 0.3);
+}
+
+@media (max-width: 360px) {
+  .flow-card {
+    padding: 18px 16px;
+  }
+
+  .interest-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

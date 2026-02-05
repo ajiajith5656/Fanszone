@@ -1,0 +1,69 @@
+.verification-card {
+  gap: 20px;
+}
+
+.verification-section {
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.verification-section:last-of-type {
+  border-bottom: none;
+}
+
+.verification-section h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.document-preview {
+  position: relative;
+  max-width: 100%;
+  margin-top: 12px;
+}
+
+.document-preview img {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.upload-btn {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px 20px;
+  color: #f6f2ff;
+  font-weight: 600;
+  font-size: 13px;
+  margin-top: 12px;
+  cursor: pointer;
+}
+
+.camera-container {
+  margin-top: 12px;
+}
+
+.camera-container video {
+  width: 100%;
+  border-radius: 12px;
+  background: #000;
+}
+
+.camera-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.capture-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #ff2d55, #ff7a59);
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}

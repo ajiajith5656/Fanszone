@@ -1,0 +1,401 @@
+import { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { apiService } from "../../services/api.service";
+import { authService } from "../../services/auth.service";
+import "../../styles/dashboard.css";
+
+type DashboardProps = {
+  onSignOut: () => void;
+};
+
+type NavTab = "profile" | "connections" | "feed" | "room";
+
+export default function Dashboard({ onSignOut }: DashboardProps) {
+  const { signupData } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<NavTab>("feed");
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    try {
+      await apiService.getUserProfile();
+    } catch (err) {
+      console.error("Failed to load profile", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = () => {
+    authService.signOut();
+    onSignOut();
+  };
+
+  if (loading) {
+    return (
+      <div className="dashboard loading">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="dashboard">
+      {/* Header */}
+      <header className="dashboard-header">
+        <button className="header-icon-btn" onClick={handleSignOut} aria-label="Sign out">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+        </button>
+        
+        <h1 className="dashboard-logo">MC</h1>
+        
+        <button className="header-icon-btn" aria-label="Messages">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        </button>
+      </header>
+
+      {/* Main Content */}
+      <main className="dashboard-content">
+        {activeTab === "feed" && <FeedView signupData={signupData} />}
+        {activeTab === "connections" && <ConnectionsView />}
+        {activeTab === "profile" && <ProfileView signupData={signupData} />}
+        {activeTab === "room" && <RoomView />}
+      </main>
+
+      {/* Bottom Navigation */}
+      <nav className="bottom-nav">
+        <button
+          className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
+          onClick={() => setActiveTab("profile")}
+          aria-label="Profile"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          <span>Profile</span>
+        </button>
+
+        <button
+          className={`nav-item ${activeTab === "connections" ? "active" : ""}`}
+          onClick={() => setActiveTab("connections")}
+          aria-label="Connections"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <span>Connections</span>
+        </button>
+
+        <button
+          className={`nav-item ${activeTab === "feed" ? "active" : ""}`}
+          onClick={() => setActiveTab("feed")}
+          aria-label="Feed"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <line x1="3" y1="9" x2="21" y2="9" />
+            <line x1="9" y1="21" x2="9" y2="9" />
+          </svg>
+          <span>Feed</span>
+        </button>
+
+        <button
+          className={`nav-item ${activeTab === "room" ? "active" : ""}`}
+          onClick={() => setActiveTab("room")}
+          aria-label="Room"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+          </svg>
+          <span>Room</span>
+        </button>
+      </nav>
+    </div>
+  );
+}
+
+// Feed View Component
+function FeedView({ signupData: _signupData }: { signupData: any }) {
+  const [matches, setMatches] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadMatches();
+  }, []);
+
+  const loadMatches = async () => {
+    try {
+      const response = await apiService.getRecommendations();
+      setMatches(response.data || []);
+    } catch (err) {
+      console.error("Failed to load matches", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAction = async (action: 'like' | 'pass' | 'super_like') => {
+    if (matches.length === 0) return;
+    
+    try {
+      // Call API to record action
+      // await apiService.recordSwipe(matches[0].id, action);
+      console.log('User action:', action, 'on profile:', matches[0]);
+      
+      // Remove current match and show next
+      setMatches(prev => prev.slice(1));
+    } catch (err) {
+      console.error("Failed to record action", err);
+    }
+  };
+
+  return (
+    <div className="feed-view">
+      <div className="feed-header">
+        <h2>Discover</h2>
+        <p className="feed-subtitle">Find your perfect match</p>
+      </div>
+      
+      {loading ? (
+        <div className="feed-loading">
+          <p>Loading matches...</p>
+        </div>
+      ) : matches.length > 0 ? (
+        <>
+          <div className="profile-cards">
+            <div className="profile-stack-card">
+              <div className="card-image">
+                {matches[0].images?.[0] ? (
+                  <img
+                    src={matches[0].images[0]}
+                    alt={matches[0].name}
+                  />
+                ) : (
+                  <div className="card-placeholder">No image</div>
+                )}
+              </div>
+              <div className="card-info">
+                <h3>{matches[0].name}, {matches[0].age}</h3>
+                <p>{matches[0].distance && `${matches[0].distance} km away`} {matches[0].isOnline && '• Active now'}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="action-buttons">
+            <button className="action-btn reject" onClick={() => handleAction('pass')} aria-label="Pass">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+            <button className="action-btn like" onClick={() => handleAction('like')} aria-label="Like">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+            </button>
+            <button className="action-btn super-like" onClick={() => handleAction('super_like')} aria-label="Super Like">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+            </button>
+          </div>
+        </>
+      ) : (
+        <div className="empty-state">
+          <p>No more profiles to show</p>
+          <p style={{ fontSize: '14px', opacity: 0.6 }}>Check back later for new matches!</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Connections View Component
+function ConnectionsView() {
+  const [connections, setConnections] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadConnections();
+  }, []);
+
+  const loadConnections = async () => {
+    try {
+      const response = await apiService.getMatches();
+      setConnections(response.data || []);
+    } catch (err) {
+      console.error("Failed to load connections", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="connections-view">
+      <div className="section-header">
+        <h2>Connections</h2>
+        <p className="section-subtitle">Your matches and conversations</p>
+      </div>
+      
+      {loading ? (
+        <div className="feed-loading">
+          <p>Loading connections...</p>
+        </div>
+      ) : connections.length > 0 ? (
+        <div className="connections-list">
+          {connections.map((connection: any) => (
+            <div key={connection.id} className="connection-item">
+              <div className="connection-avatar">
+                {connection.image ? (
+                  <img src={connection.image} alt={connection.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                ) : (
+                  <div className="avatar-placeholder">
+                    {connection.name?.[0]?.toUpperCase() || '?'}
+                  </div>
+                )}
+                {connection.isOnline && <span className="online-indicator"></span>}
+              </div>
+              <div className="connection-info">
+                <h4>{connection.name}</h4>
+                <p>{connection.lastMessage || 'New match!'}</p>
+              </div>
+              <span className="connection-time">{connection.timestamp || ''}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state">
+          <p>No connections yet</p>
+          <p style={{ fontSize: '14px', opacity: 0.6 }}>Start swiping to make connections!</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Profile View Component
+function ProfileView({ signupData }: { signupData: any }) {
+  return (
+    <div className="profile-view">
+      <div className="section-header">
+        <h2>My Profile</h2>
+      </div>
+      
+      <div className="profile-content">
+        <div className="profile-images-grid">
+          {signupData.images?.[0] ? (
+            <div className="profile-image-item main">
+              <img src={URL.createObjectURL(signupData.images[0])} alt="Profile" />
+            </div>
+          ) : (
+            <div className="profile-image-item main placeholder">
+              <span>Add Photo</span>
+            </div>
+          )}
+          <div className="profile-image-item placeholder">
+            <span>+</span>
+          </div>
+          <div className="profile-image-item placeholder">
+            <span>+</span>
+          </div>
+        </div>
+
+        <div className="profile-details">
+          <h3>{signupData.name}, {calculateAge(signupData.dateOfBirth || "2000-01-01")}</h3>
+          <div className="profile-info-item">
+            <span className="info-label">Looking for:</span>
+            <span className="info-value">{signupData.lookingFor || "Not specified"}</span>
+          </div>
+          <div className="profile-info-item">
+            <span className="info-label">Interests:</span>
+            <div className="interests-tags">
+              {signupData.interests?.map((interest: string) => (
+                <span key={interest} className="interest-tag">{interest}</span>
+              )) || <span className="info-value">No interests added</span>}
+            </div>
+          </div>
+        </div>
+
+        <button className="edit-profile-btn">Edit Profile</button>
+      </div>
+    </div>
+  );
+}
+
+// Room View Component
+function RoomView() {
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadRooms();
+  }, []);
+
+  const loadRooms = async () => {
+    try {
+      // API endpoint to be implemented
+      // const response = await apiService.getRooms();
+      // setRooms(response.data || []);
+      setRooms([]);
+    } catch (err) {
+      console.error("Failed to load rooms", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="room-view">
+      <div className="section-header">
+        <h2>Chat Rooms</h2>
+        <p className="section-subtitle">Join conversations and meet new people</p>
+      </div>
+      
+      {loading ? (
+        <div className="feed-loading">
+          <p>Loading rooms...</p>
+        </div>
+      ) : rooms.length > 0 ? (
+        <div className="rooms-list">
+          {rooms.map((room: any) => (
+            <div key={room.id} className="room-card">
+              <div className="room-icon">{room.icon || '💬'}</div>
+              <h4>{room.name}</h4>
+              <p>{room.membersOnline || 0} members online</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state">
+          <p>No chat rooms available</p>
+          <p style={{ fontSize: '14px', opacity: 0.6 }}>Check back soon for group conversations!</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function calculateAge(birthdate: string): number {
+  const today = new Date();
+  const birth = new Date(birthdate);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return age;
+}
