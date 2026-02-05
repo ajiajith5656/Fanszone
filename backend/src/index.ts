@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import profileImagesRouter from './routes/profile-images';
 
 dotenv.config();
 
@@ -43,9 +44,13 @@ app.get('/api/test', (req: Request, res: Response) => {
     message: 'API is working!',
     environment: process.env.NODE_ENV,
     supabaseConfigured: !!process.env.SUPABASE_URL,
-    cognitoConfigured: !!process.env.COGNITO_USER_POOL_ID
+    cognitoConfigured: !!process.env.COGNITO_USER_POOL_ID,
+    s3Configured: !!process.env.AWS_REGION
   });
 });
+
+// Profile images routes
+app.use('/api/profile/images', profileImagesRouter);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
