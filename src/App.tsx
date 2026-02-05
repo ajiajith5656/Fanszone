@@ -15,13 +15,16 @@ import ResetOtp from "./features/auth/ResetOtp";
 import ResetNewPassword from "./features/auth/ResetNewPassword";
 import Dashboard from "./features/dashboard/Dashboard";
 import type { NavTab } from "./features/dashboard/Dashboard";
-import AdminDashboard from "./features/admin/AdminDashboard";
+import { AdminDashboard } from "./features/admin/AdminDashboard";
 import { AllConnectionsPage } from "./features/connections/AllConnectionsPage";
 import { ConnectionRequestsPage } from "./features/connections/ConnectionRequestsPage";
 import { BlockedAccountsPage } from "./features/connections/BlockedAccountsPage";
 import { ReportAbusePage } from "./features/connections/ReportAbusePage";
 import { PostViewPage } from "./features/posts/PostViewPage";
 import { PostContentPage } from "./features/posts/PostContentPage";
+import { ProfileViewPage } from "./features/profile/ProfileViewPage";
+import { HelpPage } from "./features/help/HelpPage";
+import { MessengerPage } from "./features/messenger/MessengerPage";
 import MobileGuard from "./components/MobileGuard";
 import "./styles/spinner.css";
 
@@ -51,7 +54,7 @@ export default function App() {
 
   const renderDashboard = (initialTab: NavTab) =>
     userRole === "admin" ? (
-      <AdminDashboard onSignOut={() => navigateTo("/", 0)} />
+      <AdminDashboard />
     ) : (
       <Dashboard
         onSignOut={() => navigateTo("/", 0)}
@@ -200,6 +203,16 @@ export default function App() {
   <Route path="/post/:postId" element={<PostViewPage />} />
   <Route path="/post/create" element={<PostContentPage />} />
   <Route path="/post/edit/:postId" element={<PostContentPage />} />
+
+  {/* Profile View Page */}
+  <Route path="/profile/:userId" element={<ProfileViewPage />} />
+
+  {/* Help Page */}
+  <Route path="/help" element={<HelpPage />} />
+
+  {/* Messenger */}
+  <Route path="/messenger" element={<MessengerPage />} />
+  <Route path="/messenger/:chatUserId" element={<MessengerPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

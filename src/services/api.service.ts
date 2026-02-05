@@ -207,6 +207,53 @@ class ApiService {
   async checkPostAccess(postId: string) {
     return this.client.get(`/posts/${postId}/access`);
   }
+
+  // User Profile endpoints (view other users)
+  async viewUserProfile(userId: string) {
+    return this.client.get(`/users/${userId}/profile`);
+  }
+
+  // Messenger endpoints
+  async getMessages(userId: string) {
+    return this.client.get(`/messages/${userId}`);
+  }
+
+  async sendMessage(userId: string, content: string) {
+    return this.client.post(`/messages/${userId}`, { content });
+  }
+
+  async markMessagesAsRead(userId: string) {
+    return this.client.put(`/messages/${userId}/read`);
+  }
+
+  // Admin endpoints
+  async adminGetUsers() {
+    return this.client.get(`/admin/users`);
+  }
+
+  async adminGetPosts() {
+    return this.client.get(`/admin/posts`);
+  }
+
+  async adminGetVerificationRequests() {
+    return this.client.get(`/admin/verifications`);
+  }
+
+  async adminApproveVerification(requestId: string) {
+    return this.client.post(`/admin/verifications/${requestId}/approve`);
+  }
+
+  async adminRejectVerification(requestId: string, reason: string) {
+    return this.client.post(`/admin/verifications/${requestId}/reject`, { reason });
+  }
+
+  async adminDeletePost(postId: string) {
+    return this.client.delete(`/admin/posts/${postId}`);
+  }
+
+  async adminBanUser(userId: string) {
+    return this.client.post(`/admin/users/${userId}/ban`);
+  }
 }
 
 export const apiService = new ApiService();
