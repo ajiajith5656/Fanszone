@@ -69,7 +69,7 @@ git push origin main
 
 6. **Access Your App**
    - Once deployed, you'll get an amplify domain like:
-     `https://main.d1234567890.amplifyapp.com`
+   `https://main.d19gr2nqobengq.amplifyapp.com`
 
 ### Option 2: Deploy via AWS CLI
 
@@ -109,8 +109,7 @@ Ensure your backend API has CORS configured to accept requests from your Amplify
 // Backend CORS configuration
 app.use(cors({
   origin: [
-    'http://localhost:5173',
-    'https://main.d1234567890.amplifyapp.com',
+      'https://main.d19gr2nqobengq.amplifyapp.com',
     'https://your-custom-domain.com'
   ],
   credentials: true

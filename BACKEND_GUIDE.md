@@ -54,7 +54,7 @@ NODE_ENV=development
 PORT=3000
 
 # Database
-DB_HOST=localhost
+DB_HOST=your-db-host
 DB_PORT=5432
 DB_NAME=mallucupid
 DB_USER=postgres
@@ -569,7 +569,7 @@ Use Postman or curl to test endpoints:
 
 ```bash
 # Create profile
-curl -X POST http://localhost:3000/api/users/profile \
+curl -X POST https://main.d19gr2nqobengq.amplifyapp.com/api/users/profile \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

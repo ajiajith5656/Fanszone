@@ -392,7 +392,7 @@ Add these to your backend `.env`:
 SUPER_ADMIN_EMAIL=superadmin@mallucupid.com
 
 # Database
-DB_HOST=localhost
+DB_HOST=your-db-host
 DB_PORT=5432
 DB_NAME=mallucupid
 DB_USER=postgres

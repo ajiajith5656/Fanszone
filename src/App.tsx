@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { CSSProperties } from "react";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import LandingPage from "./features/auth/LandingPage";
 import LoginPage from "./features/auth/LoginPage";
@@ -13,38 +14,45 @@ import ResetStepOne from "./features/auth/ResetStepOne";
 import ResetOtp from "./features/auth/ResetOtp";
 import ResetNewPassword from "./features/auth/ResetNewPassword";
 import Dashboard from "./features/dashboard/Dashboard";
+import type { NavTab } from "./features/dashboard/Dashboard";
 import AdminDashboard from "./features/admin/AdminDashboard";
 import MobileGuard from "./components/MobileGuard";
 import "./styles/spinner.css";
 
-type Route =
-  | "landing"
-  | "login"
-  | "signup-step1"
-  | "signup-email"
-  | "signup-otp"
-  | "signup-looking-for"
-  | "signup-images"
-  | "signup-verification"
-  | "reset-email"
-  | "reset-otp"
-  | "reset-new-password"
-  | "dashboard";
+type TabPathMap = Record<NavTab, string>;
 
 export default function App() {
   const { userRole } = useAuth();
-  const [route, setRoute] = useState<Route>("landing");
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetCode, setResetCode] = useState("");
 
-  const navigateTo = (nextRoute: Route, delay = 550) => {
+  const tabPathMap: TabPathMap = {
+    profile: "/profile",
+    connections: "/connections",
+    feed: "/feed",
+    room: "/room",
+  };
+
+  const navigateTo = (path: string, delay = 550) => {
     setIsLoading(true);
     window.setTimeout(() => {
-      setRoute(nextRoute);
+      navigate(path);
       setIsLoading(false);
     }, delay);
   };
+
+  const renderDashboard = (initialTab: NavTab) =>
+    userRole === "admin" ? (
+      <AdminDashboard onSignOut={() => navigateTo("/", 0)} />
+    ) : (
+      <Dashboard
+        onSignOut={() => navigateTo("/", 0)}
+        initialTab={initialTab}
+        onTabChange={(tab) => navigate(tabPathMap[tab])}
+      />
+    );
 
   return (
     <MobileGuard>
@@ -58,103 +66,126 @@ export default function App() {
         </div>
       )}
 
-      {route === "landing" && (
-        <LandingPage onGetStarted={() => navigateTo("login")} />
-      )}
-
-      {route === "login" && (
-        <LoginPage
-          onForgotPassword={() => navigateTo("reset-email")}
-          onCreateAccount={() => navigateTo("signup-step1")}
-          onSuccess={() => navigateTo("dashboard")}
+      <Routes>
+        <Route
+          path="/"
+          element={<LandingPage onGetStarted={() => navigateTo("/login")} />}
         />
-      )}
-
-      {/* Signup Flow */}
-      {route === "signup-step1" && (
-        <SignupStepOne
-          onNext={() => navigateTo("signup-email")}
-          onBack={() => navigateTo("login")}
+        <Route
+          path="/login"
+          element={
+            <LoginPage
+              onForgotPassword={() => navigateTo("/reset")}
+              onCreateAccount={() => navigateTo("/signup")}
+              onSuccess={() => navigateTo("/dashboard")}
+            />
+          }
         />
-      )}
 
-      {route === "signup-email" && (
-        <SignupEmailStep
-          onSendCode={() => navigateTo("signup-otp")}
-          onBack={() => navigateTo("signup-step1")}
+        {/* Signup Flow */}
+        <Route
+          path="/signup"
+          element={
+            <SignupStepOne
+              onNext={() => navigateTo("/signup/email")}
+              onBack={() => navigateTo("/login")}
+            />
+          }
         />
-      )}
-
-      {route === "signup-otp" && (
-        <SignupOtp
-          onConfirm={() => navigateTo("signup-looking-for")}
-          onBack={() => navigateTo("signup-email")}
+        <Route
+          path="/signup/email"
+          element={
+            <SignupEmailStep
+              onSendCode={() => navigateTo("/signup/otp")}
+              onBack={() => navigateTo("/signup")}
+            />
+          }
         />
-      )}
-
-      {route === "signup-looking-for" && (
-        <LookingForStep
-          onNext={() => navigateTo("signup-images")}
-          onBack={() => navigateTo("signup-otp")}
+        <Route
+          path="/signup/otp"
+          element={
+            <SignupOtp
+              onConfirm={() => navigateTo("/signup/looking-for")}
+              onBack={() => navigateTo("/signup/email")}
+            />
+          }
         />
-      )}
-
-      {route === "signup-images" && (
-        <ProfileImagesStep
-          onNext={() => navigateTo("signup-verification")}
-          onBack={() => navigateTo("signup-looking-for")}
+        <Route
+          path="/signup/looking-for"
+          element={
+            <LookingForStep
+              onNext={() => navigateTo("/signup/images")}
+              onBack={() => navigateTo("/signup/otp")}
+            />
+          }
         />
-      )}
-
-      {route === "signup-verification" && (
-        <VerificationStep
-          onNext={() => navigateTo("dashboard")}
-          onSkip={() => navigateTo("dashboard")}
-          onBack={() => navigateTo("signup-images")}
+        <Route
+          path="/signup/images"
+          element={
+            <ProfileImagesStep
+              onNext={() => navigateTo("/signup/verification")}
+              onBack={() => navigateTo("/signup/looking-for")}
+            />
+          }
         />
-      )}
-
-      {/* Reset Password Flow */}
-      {route === "reset-email" && (
-        <ResetStepOne
-          onSendCode={(email) => {
-            setResetEmail(email);
-            navigateTo("reset-otp");
-          }}
-          onBack={() => navigateTo("login")}
+        <Route
+          path="/signup/verification"
+          element={
+            <VerificationStep
+              onNext={() => navigateTo("/dashboard")}
+              onSkip={() => navigateTo("/dashboard")}
+              onBack={() => navigateTo("/signup/images")}
+            />
+          }
         />
-      )}
 
-      {route === "reset-otp" && (
-        <ResetOtp
-          email={resetEmail}
-          onConfirm={(code) => {
-            setResetCode(code);
-            navigateTo("reset-new-password");
-          }}
-          onBack={() => navigateTo("reset-email")}
+        {/* Reset Password Flow */}
+        <Route
+          path="/reset"
+          element={
+            <ResetStepOne
+              onSendCode={(email) => {
+                setResetEmail(email);
+                navigateTo("/reset/otp");
+              }}
+              onBack={() => navigateTo("/login")}
+            />
+          }
         />
-      )}
-
-      {route === "reset-new-password" && (
-        <ResetNewPassword
-          email={resetEmail}
-          code={resetCode}
-          onComplete={() => navigateTo("login")}
-          onBack={() => navigateTo("reset-otp")}
+        <Route
+          path="/reset/otp"
+          element={
+            <ResetOtp
+              email={resetEmail}
+              onConfirm={(code) => {
+                setResetCode(code);
+                navigateTo("/reset/new-password");
+              }}
+              onBack={() => navigateTo("/reset")}
+            />
+          }
         />
-      )}
+        <Route
+          path="/reset/new-password"
+          element={
+            <ResetNewPassword
+              email={resetEmail}
+              code={resetCode}
+              onComplete={() => navigateTo("/login")}
+              onBack={() => navigateTo("/reset/otp")}
+            />
+          }
+        />
 
-      {/* Dashboard - Role-based routing */}
-      {route === "dashboard" && (
-        <>
-          {userRole === "admin" ? (
-            <AdminDashboard onSignOut={() => navigateTo("landing", 0)} />
-          ) : (
-            <Dashboard onSignOut={() => navigateTo("landing", 0)} />
-          )}
-        </>
-      )}
+        {/* Dashboard + Tabs */}
+        <Route path="/dashboard" element={renderDashboard("feed")} />
+        <Route path="/feed" element={renderDashboard("feed")} />
+        <Route path="/connections" element={renderDashboard("connections")} />
+        <Route path="/profile" element={renderDashboard("profile")} />
+        <Route path="/room" element={renderDashboard("room")} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </MobileGuard>
   );
 }

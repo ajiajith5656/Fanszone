@@ -6,18 +6,26 @@ import "../../styles/dashboard.css";
 
 type DashboardProps = {
   onSignOut: () => void;
+  initialTab?: NavTab;
+  onTabChange?: (tab: NavTab) => void;
 };
 
-type NavTab = "profile" | "connections" | "feed" | "room";
+export type NavTab = "profile" | "connections" | "feed" | "room";
 
-export default function Dashboard({ onSignOut }: DashboardProps) {
+export default function Dashboard({ onSignOut, initialTab, onTabChange }: DashboardProps) {
   const { signupData } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<NavTab>("feed");
+  const [activeTab, setActiveTab] = useState<NavTab>(initialTab || "feed");
 
   useEffect(() => {
     loadProfile();
   }, []);
+
+  useEffect(() => {
+    if (initialTab && initialTab !== activeTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, activeTab]);
 
   const loadProfile = async () => {
     try {
@@ -75,7 +83,10 @@ export default function Dashboard({ onSignOut }: DashboardProps) {
       <nav className="bottom-nav">
         <button
           className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
-          onClick={() => setActiveTab("profile")}
+          onClick={() => {
+            setActiveTab("profile");
+            onTabChange?.("profile");
+          }}
           aria-label="Profile"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -87,7 +98,10 @@ export default function Dashboard({ onSignOut }: DashboardProps) {
 
         <button
           className={`nav-item ${activeTab === "connections" ? "active" : ""}`}
-          onClick={() => setActiveTab("connections")}
+          onClick={() => {
+            setActiveTab("connections");
+            onTabChange?.("connections");
+          }}
           aria-label="Connections"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -101,7 +115,10 @@ export default function Dashboard({ onSignOut }: DashboardProps) {
 
         <button
           className={`nav-item ${activeTab === "feed" ? "active" : ""}`}
-          onClick={() => setActiveTab("feed")}
+          onClick={() => {
+            setActiveTab("feed");
+            onTabChange?.("feed");
+          }}
           aria-label="Feed"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -114,7 +131,10 @@ export default function Dashboard({ onSignOut }: DashboardProps) {
 
         <button
           className={`nav-item ${activeTab === "room" ? "active" : ""}`}
-          onClick={() => setActiveTab("room")}
+          onClick={() => {
+            setActiveTab("room");
+            onTabChange?.("room");
+          }}
           aria-label="Room"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
