@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { apiService } from "../../services/api.service";
 import { authService } from "../../services/auth.service";
 import "../../styles/dashboard.css";
+import "../../styles/feed.css";
 
 type DashboardProps = {
   onSignOut: () => void;
@@ -82,18 +83,19 @@ export default function Dashboard({ onSignOut, initialTab, onTabChange }: Dashbo
       {/* Bottom Navigation */}
       <nav className="bottom-nav">
         <button
-          className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
+          className={`nav-item ${activeTab === "feed" ? "active" : ""}`}
           onClick={() => {
-            setActiveTab("profile");
-            onTabChange?.("profile");
+            setActiveTab("feed");
+            onTabChange?.("feed");
           }}
-          aria-label="Profile"
+          aria-label="Feed"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+            <line x1="3" y1="9" x2="21" y2="9" />
+            <line x1="9" y1="21" x2="9" y2="9" />
           </svg>
-          <span>Profile</span>
+          <span>Feed</span>
         </button>
 
         <button
@@ -113,20 +115,33 @@ export default function Dashboard({ onSignOut, initialTab, onTabChange }: Dashbo
           <span>Connections</span>
         </button>
 
+        {/* Center Add Post Button */}
         <button
-          className={`nav-item ${activeTab === "feed" ? "active" : ""}`}
+          className="nav-item-center"
+          onClick={() => window.location.href = '/post/create'}
+          aria-label="Create Post"
+        >
+          <div className="add-post-btn">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </div>
+        </button>
+
+        <button
+          className={`nav-item ${activeTab === "profile" ? "active" : ""}`}
           onClick={() => {
-            setActiveTab("feed");
-            onTabChange?.("feed");
+            setActiveTab("profile");
+            onTabChange?.("profile");
           }}
-          aria-label="Feed"
+          aria-label="Profile"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <line x1="3" y1="9" x2="21" y2="9" />
-            <line x1="9" y1="21" x2="9" y2="9" />
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
           </svg>
-          <span>Feed</span>
+          <span>Profile</span>
         </button>
 
         <button
@@ -150,98 +165,246 @@ export default function Dashboard({ onSignOut, initialTab, onTabChange }: Dashbo
 
 // Feed View Component
 function FeedView({ signupData: _signupData }: { signupData: any }) {
-  const [matches, setMatches] = useState<any[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
-    loadMatches();
-  }, []);
+    loadPosts();
+  }, [page]);
 
-  const loadMatches = async () => {
+  const loadPosts = async () => {
     try {
-      const response = await apiService.getRecommendations();
-      setMatches(response.data || []);
+      const response = await apiService.getPosts(page, 10);
+      setPosts(prev => page === 1 ? response.data.posts : [...prev, ...response.data.posts]);
+      setHasMore(response.data.hasMore || false);
     } catch (err) {
-      console.error("Failed to load matches", err);
+      console.error("Failed to load posts", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAction = async (action: 'like' | 'pass' | 'super_like') => {
-    if (matches.length === 0) return;
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setPage(1);
+      loadPosts();
+      return;
+    }
     
+    setIsSearching(true);
     try {
-      // Call API to record action
-      // await apiService.recordSwipe(matches[0].id, action);
-      console.log('User action:', action, 'on profile:', matches[0]);
-      
-      // Remove current match and show next
-      setMatches(prev => prev.slice(1));
+      const response = await apiService.searchPosts(searchQuery);
+      setPosts(response.data.posts || []);
+      setHasMore(false);
     } catch (err) {
-      console.error("Failed to record action", err);
+      console.error("Search failed", err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleLike = async (postId: string, isLiked: boolean) => {
+    try {
+      if (isLiked) {
+        await apiService.unlikePost(postId);
+      } else {
+        await apiService.likePost(postId);
+      }
+      setPosts(prev => prev.map(post => 
+        post.postId === postId 
+          ? { ...post, isLiked: !isLiked, likeCount: post.likeCount + (isLiked ? -1 : 1) }
+          : post
+      ));
+    } catch (err) {
+      console.error("Failed to toggle like", err);
+    }
+  };
+
+  const handlePurchase = async (postId: string) => {
+    try {
+      await apiService.purchasePost(postId);
+      setPosts(prev => prev.map(post => 
+        post.postId === postId ? { ...post, hasAccess: true } : post
+      ));
+    } catch (err) {
+      console.error("Failed to purchase post", err);
+      alert("Failed to purchase post");
+    }
+  };
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight * 1.5 && hasMore && !loading) {
+      setPage(prev => prev + 1);
     }
   };
 
   return (
-    <div className="feed-view">
-      <div className="feed-header">
-        <h2>Discover</h2>
-        <p className="feed-subtitle">Find your perfect match</p>
+    <div className="feed-view" onScroll={handleScroll}>
+      {/* Search Bar */}
+      <div className="feed-search">
+        <input 
+          type="text"
+          placeholder="Search by author name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          className="search-input"
+        />
+        <button 
+          className="search-btn" 
+          onClick={handleSearch}
+          disabled={isSearching}
+        >
+          {isSearching ? (
+            <div className="spinner-small"></div>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+          )}
+        </button>
       </div>
-      
-      {loading ? (
-        <div className="feed-loading">
-          <p>Loading matches...</p>
-        </div>
-      ) : matches.length > 0 ? (
-        <>
-          <div className="profile-cards">
-            <div className="profile-stack-card">
-              <div className="card-image">
-                {matches[0].images?.[0] ? (
-                  <img
-                    src={matches[0].images[0]}
-                    alt={matches[0].name}
-                  />
-                ) : (
-                  <div className="card-placeholder">No image</div>
-                )}
-              </div>
-              <div className="card-info">
-                <h3>{matches[0].name}, {matches[0].age}</h3>
-                <p>{matches[0].distance && `${matches[0].distance} km away`} {matches[0].isOnline && '• Active now'}</p>
-              </div>
-            </div>
-          </div>
 
-          <div className="action-buttons">
-            <button className="action-btn reject" onClick={() => handleAction('pass')} aria-label="Pass">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-            <button className="action-btn like" onClick={() => handleAction('like')} aria-label="Like">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-              </svg>
-            </button>
-            <button className="action-btn super-like" onClick={() => handleAction('super_like')} aria-label="Super Like">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-            </button>
-          </div>
-        </>
+      {/* Posts Feed */}
+      {loading && page === 1 ? (
+        <div className="feed-loading">
+          <div className="spinner"></div>
+          <p>Loading posts...</p>
+        </div>
+      ) : posts.length > 0 ? (
+        <div className="posts-container">
+          {posts.map((post: any) => (
+            <PostCard 
+              key={post.postId} 
+              post={post} 
+              onLike={handleLike}
+              onPurchase={handlePurchase}
+            />
+          ))}
+          {loading && <div className="loading-more">Loading more...</div>}
+        </div>
       ) : (
         <div className="empty-state">
-          <p>No more profiles to show</p>
-          <p style={{ fontSize: '14px', opacity: 0.6 }}>Check back later for new matches!</p>
+          <p>No posts yet</p>
+          <p style={{ fontSize: '14px', opacity: 0.6 }}>Check back later for new content!</p>
         </div>
       )}
     </div>
   );
+}
+
+// Post Card Component
+function PostCard({ post, onLike, onPurchase }: { post: any; onLike: (postId: string, isLiked: boolean) => void; onPurchase: (postId: string) => void }) {
+  const isPaid = post.accessType === 'paid' && !post.hasAccess;
+
+  return (
+    <div className="post-card">
+      {/* User Info */}
+      <div className="post-header">
+        <div className="post-user-info">
+          <div className="post-avatar">
+            <img src={post.authorAvatar} alt={post.authorName} />
+          </div>
+          <div className="post-user-details">
+            <div className="post-author-name">
+              {post.authorName}
+              {post.isVerified && (
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#4CAF50" className="verified-icon">
+                  <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                </svg>
+              )}
+            </div>
+            <div className="post-meta">
+              <span className="post-timestamp">{formatTimestamp(post.createdAt)}</span>
+              {post.mood && <span className="post-mood">• {post.mood}</span>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Post Content */}
+      {post.mediaType === 'image' && (
+        <div className={`post-media ${isPaid ? 'blurred' : ''}`}>
+          <img src={post.mediaUrl} alt="Post" className="post-image" />
+          {isPaid && (
+            <div className="paid-overlay">
+              <button className="pay-button" onClick={() => onPurchase(post.postId)}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                  <line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+                Pay ${post.price} to Watch
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {post.mediaType === 'video' && (
+        <div className={`post-media ${isPaid ? 'blurred' : ''}`}>
+          <video controls className="post-video" src={post.mediaUrl}></video>
+          {isPaid && (
+            <div className="paid-overlay">
+              <button className="pay-button" onClick={() => onPurchase(post.postId)}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                  <line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+                Pay ${post.price} to Watch
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {post.description && (
+        <div className="post-description">{post.description}</div>
+      )}
+
+      {/* Post Actions */}
+      <div className="post-actions">
+        <button 
+          className={`post-action-btn ${post.isLiked ? 'liked' : ''}`}
+          onClick={() => onLike(post.postId, post.isLiked)}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill={post.isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          <span>{post.likeCount || 0}</span>
+        </button>
+        <button 
+          className="post-action-btn"
+          onClick={() => window.location.href = `/post/${post.postId}`}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span>{post.commentCount || 0}</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function formatTimestamp(timestamp: string): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
 }
 
 // Connections View Component

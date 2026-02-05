@@ -20,6 +20,8 @@ import { AllConnectionsPage } from "./features/connections/AllConnectionsPage";
 import { ConnectionRequestsPage } from "./features/connections/ConnectionRequestsPage";
 import { BlockedAccountsPage } from "./features/connections/BlockedAccountsPage";
 import { ReportAbusePage } from "./features/connections/ReportAbusePage";
+import { PostViewPage } from "./features/posts/PostViewPage";
+import { PostContentPage } from "./features/posts/PostContentPage";
 import MobileGuard from "./components/MobileGuard";
 import "./styles/spinner.css";
 
@@ -193,6 +195,11 @@ export default function App() {
   <Route path="/connections/requests" element={<ConnectionRequestsPage />} />
   <Route path="/blocked-accounts" element={<BlockedAccountsPage />} />
   <Route path="/report-abuse" element={<ReportAbusePage />} />
+
+  {/* Post Pages */}
+  <Route path="/post/:postId" element={<PostViewPage />} />
+  <Route path="/post/create" element={<PostContentPage />} />
+  <Route path="/post/edit/:postId" element={<PostContentPage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -144,6 +144,69 @@ class ApiService {
   async unblockUser(userId: string) {
     return this.client.delete(`/users/blocked/${userId}`);
   }
+
+  // Post endpoints
+  async getPosts(page: number = 1, limit: number = 10) {
+    return this.client.get(`/posts?page=${page}&limit=${limit}`);
+  }
+
+  async searchPosts(query: string) {
+    return this.client.get(`/posts/search?q=${encodeURIComponent(query)}`);
+  }
+
+  async getPostById(postId: string) {
+    return this.client.get(`/posts/${postId}`);
+  }
+
+  async createPost(data: FormData) {
+    return this.client.post('/posts', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
+  async updatePost(postId: string, data: FormData) {
+    return this.client.put(`/posts/${postId}`, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
+  async deletePost(postId: string) {
+    return this.client.delete(`/posts/${postId}`);
+  }
+
+  async likePost(postId: string) {
+    return this.client.post(`/posts/${postId}/like`);
+  }
+
+  async unlikePost(postId: string) {
+    return this.client.delete(`/posts/${postId}/like`);
+  }
+
+  // Comment endpoints
+  async getComments(postId: string) {
+    return this.client.get(`/posts/${postId}/comments`);
+  }
+
+  async addComment(postId: string, content: string) {
+    return this.client.post(`/posts/${postId}/comments`, { content });
+  }
+
+  async deleteComment(postId: string, commentId: string) {
+    return this.client.delete(`/posts/${postId}/comments/${commentId}`);
+  }
+
+  // Payment endpoints
+  async purchasePost(postId: string) {
+    return this.client.post(`/posts/${postId}/purchase`);
+  }
+
+  async checkPostAccess(postId: string) {
+    return this.client.get(`/posts/${postId}/access`);
+  }
 }
 
 export const apiService = new ApiService();
