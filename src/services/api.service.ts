@@ -99,6 +99,51 @@ class ApiService {
   async getRecommendations() {
     return this.client.get('/recommendations');
   }
+
+  // Connection endpoints
+  async getConnections(page: number = 1, limit: number = 5) {
+    return this.client.get(`/connections?page=${page}&limit=${limit}`);
+  }
+
+  async searchConnections(query: string) {
+    return this.client.get(`/connections/search?q=${encodeURIComponent(query)}`);
+  }
+
+  async getConnectionRequests(page: number = 1, limit: number = 5) {
+    return this.client.get(`/connections/requests?page=${page}&limit=${limit}`);
+  }
+
+  async acceptConnectionRequest(userId: string) {
+    return this.client.post(`/connections/requests/${userId}/accept`);
+  }
+
+  async rejectConnectionRequest(userId: string) {
+    return this.client.post(`/connections/requests/${userId}/reject`);
+  }
+
+  async sendConnectionRequest(userId: string) {
+    return this.client.post(`/connections/requests/${userId}`);
+  }
+
+  async removeConnection(userId: string) {
+    return this.client.delete(`/connections/${userId}`);
+  }
+
+  async reportUser(userId: string, reason: string, description: string) {
+    return this.client.post('/reports', { userId, reason, description });
+  }
+
+  async getBlockedUsers() {
+    return this.client.get('/users/blocked');
+  }
+
+  async blockUser(userId: string) {
+    return this.client.post(`/users/blocked/${userId}`);
+  }
+
+  async unblockUser(userId: string) {
+    return this.client.delete(`/users/blocked/${userId}`);
+  }
 }
 
 export const apiService = new ApiService();

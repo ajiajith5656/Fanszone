@@ -16,6 +16,10 @@ import ResetNewPassword from "./features/auth/ResetNewPassword";
 import Dashboard from "./features/dashboard/Dashboard";
 import type { NavTab } from "./features/dashboard/Dashboard";
 import AdminDashboard from "./features/admin/AdminDashboard";
+import { AllConnectionsPage } from "./features/connections/AllConnectionsPage";
+import { ConnectionRequestsPage } from "./features/connections/ConnectionRequestsPage";
+import { BlockedAccountsPage } from "./features/connections/BlockedAccountsPage";
+import { ReportAbusePage } from "./features/connections/ReportAbusePage";
 import MobileGuard from "./components/MobileGuard";
 import "./styles/spinner.css";
 
@@ -183,6 +187,12 @@ export default function App() {
         <Route path="/connections" element={renderDashboard("connections")} />
         <Route path="/profile" element={renderDashboard("profile")} />
         <Route path="/room" element={renderDashboard("room")} />
+
+  {/* Connection Full Pages */}
+  <Route path="/connections/all" element={<AllConnectionsPage />} />
+  <Route path="/connections/requests" element={<ConnectionRequestsPage />} />
+  <Route path="/blocked-accounts" element={<BlockedAccountsPage />} />
+  <Route path="/report-abuse" element={<ReportAbusePage />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

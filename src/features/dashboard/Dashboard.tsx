@@ -246,61 +246,265 @@ function FeedView({ signupData: _signupData }: { signupData: any }) {
 
 // Connections View Component
 function ConnectionsView() {
+  const [activeTab, setActiveTab] = useState<'connections' | 'requests'>('connections');
   const [connections, setConnections] = useState<any[]>([]);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [connectionCount, setConnectionCount] = useState(0);
+  const [requestCount, setRequestCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadConnections();
-  }, []);
+    loadData();
+  }, [activeTab]);
 
-  const loadConnections = async () => {
+  const loadData = async () => {
+    setLoading(true);
     try {
-      const response = await apiService.getMatches();
-      setConnections(response.data || []);
+      if (activeTab === 'connections') {
+        const response = await apiService.getConnections(1, 5);
+        setConnections(response.data.connections || []);
+        setConnectionCount(response.data.totalCount || 0);
+      } else {
+        const response = await apiService.getConnectionRequests(1, 5);
+        setRequests(response.data.requests || []);
+        setRequestCount(response.data.totalCount || 0);
+      }
     } catch (err) {
-      console.error("Failed to load connections", err);
+      console.error("Failed to load data", err);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    try {
+      const response = await apiService.searchConnections(searchQuery);
+      setConnections(response.data.connections || []);
+    } catch (err) {
+      console.error("Search failed", err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleAcceptRequest = async (userId: string) => {
+    try {
+      await apiService.acceptConnectionRequest(userId);
+      loadData(); // Reload to update counts
+    } catch (err) {
+      console.error("Failed to accept request", err);
+    }
+  };
+
+  const handleRejectRequest = async (userId: string) => {
+    try {
+      await apiService.rejectConnectionRequest(userId);
+      setRequests(requests.filter(r => r.userId !== userId));
+      setRequestCount(prev => Math.max(0, prev - 1));
+    } catch (err) {
+      console.error("Failed to reject request", err);
+    }
+  };
+
+  const handleReport = (userId: string) => {
+    // Open report modal
+    console.log("Report user:", userId);
+  };
+
   return (
     <div className="connections-view">
-      <div className="section-header">
-        <h2>Connections</h2>
-        <p className="section-subtitle">Your matches and conversations</p>
+      {/* Tab Selection */}
+      <div className="connections-tabs">
+        <button 
+          className={`tab-btn ${activeTab === 'connections' ? 'active' : ''}`}
+          onClick={() => setActiveTab('connections')}
+        >
+          Connections
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`}
+          onClick={() => setActiveTab('requests')}
+        >
+          Requests
+          {requestCount > 0 && <span className="badge">{requestCount}</span>}
+        </button>
       </div>
-      
-      {loading ? (
-        <div className="feed-loading">
-          <p>Loading connections...</p>
-        </div>
-      ) : connections.length > 0 ? (
-        <div className="connections-list">
-          {connections.map((connection: any) => (
-            <div key={connection.id} className="connection-item">
-              <div className="connection-avatar">
-                {connection.image ? (
-                  <img src={connection.image} alt={connection.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
-                ) : (
-                  <div className="avatar-placeholder">
-                    {connection.name?.[0]?.toUpperCase() || '?'}
-                  </div>
-                )}
-                {connection.isOnline && <span className="online-indicator"></span>}
-              </div>
-              <div className="connection-info">
-                <h4>{connection.name}</h4>
-                <p>{connection.lastMessage || 'New match!'}</p>
-              </div>
-              <span className="connection-time">{connection.timestamp || ''}</span>
+
+      {/* Connections Tab */}
+      {activeTab === 'connections' && (
+        <div className="tab-content">
+          {/* Search Box */}
+          <div className="search-box">
+            <input 
+              type="text"
+              placeholder="Search by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              className="search-input"
+            />
+            <button 
+              className="search-btn" 
+              onClick={handleSearch}
+              disabled={isSearching}
+            >
+              {isSearching ? (
+                <div className="spinner-small"></div>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="m21 21-4.35-4.35"/>
+                </svg>
+              )}
+            </button>
+          </div>
+
+          {/* Total Count */}
+          <div className="count-label">
+            Total Connections: <strong>{connectionCount}</strong>
+          </div>
+
+          {/* Connection Cards */}
+          {loading ? (
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+              <p>Loading connections...</p>
             </div>
-          ))}
+          ) : connections.length > 0 ? (
+            <>
+              <div className="connection-cards">
+                {connections.map((connection: any) => (
+                  <div key={connection.userId} className="connection-card">
+                    <div className="card-image">
+                      <img src={connection.profileImage} alt={connection.name} />
+                    </div>
+                    <div className="card-content">
+                      <div className="card-header">
+                        <h4 className="card-name">{connection.name}</h4>
+                        {connection.isVerified && (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="#4CAF50" className="verified-icon">
+                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                          </svg>
+                        )}
+                      </div>
+                      <div className="card-actions">
+                        <button className="action-btn-small view">View</button>
+                        <button className="action-btn-small message">Message</button>
+                        <button className="action-btn-small report" onClick={() => handleReport(connection.userId)}>Report</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {connections.length >= 5 && (
+                <button className="see-more-btn" onClick={() => window.location.href = '/connections/all'}>
+                  See More
+                </button>
+              )}
+            </>
+          ) : (
+            <div className="empty-state">
+              <p>No connections yet</p>
+              <p style={{ fontSize: '14px', opacity: 0.6 }}>Start swiping to make connections!</p>
+            </div>
+          )}
+
+          {/* Footer Buttons */}
+          <div className="footer-actions">
+            <button className="footer-btn" onClick={() => window.location.href = '/blocked-accounts'}>
+              Blocked Accounts
+            </button>
+            <button className="footer-btn" onClick={() => window.location.href = '/report-abuse'}>
+              Report Abuse
+            </button>
+          </div>
         </div>
-      ) : (
-        <div className="empty-state">
-          <p>No connections yet</p>
-          <p style={{ fontSize: '14px', opacity: 0.6 }}>Start swiping to make connections!</p>
+      )}
+
+      {/* Requests Tab */}
+      {activeTab === 'requests' && (
+        <div className="tab-content">
+          {/* Total Count */}
+          <div className="count-label">
+            Total Requests: <strong>{requestCount}</strong>
+          </div>
+
+          {/* Request Cards */}
+          {loading ? (
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+              <p>Loading requests...</p>
+            </div>
+          ) : requests.length > 0 ? (
+            <>
+              <div className="connection-cards">
+                {requests.map((request: any) => (
+                  <div key={request.userId} className="connection-card">
+                    <div className="card-image">
+                      <img src={request.profileImage} alt={request.name} />
+                    </div>
+                    <div className="card-content">
+                      <div className="card-header">
+                        <h4 className="card-name">{request.name}</h4>
+                        {request.isVerified && (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="#4CAF50" className="verified-icon">
+                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                          </svg>
+                        )}
+                      </div>
+                      <div className="card-actions">
+                        <button 
+                          className="action-btn-small accept" 
+                          onClick={() => handleAcceptRequest(request.userId)}
+                        >
+                          Accept
+                        </button>
+                        <button 
+                          className="action-btn-small reject" 
+                          onClick={() => handleRejectRequest(request.userId)}
+                        >
+                          Reject
+                        </button>
+                        <button 
+                          className="action-btn-small report" 
+                          onClick={() => handleReport(request.userId)}
+                        >
+                          Report
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {requests.length >= 5 && (
+                <button className="see-more-btn" onClick={() => window.location.href = '/connections/requests'}>
+                  See More
+                </button>
+              )}
+            </>
+          ) : (
+            <div className="empty-state">
+              <p>No connection requests</p>
+              <p style={{ fontSize: '14px', opacity: 0.6 }}>You'll see requests here when someone wants to connect!</p>
+            </div>
+          )}
+
+          {/* Footer Buttons */}
+          <div className="footer-actions">
+            <button className="footer-btn" onClick={() => window.location.href = '/blocked-accounts'}>
+              Blocked Accounts
+            </button>
+            <button className="footer-btn" onClick={() => window.location.href = '/report-abuse'}>
+              Report Abuse
+            </button>
+          </div>
         </div>
       )}
     </div>
