@@ -1,4 +1,4 @@
-# 🎉 Mallu Cupid - Custom Domain Setup COMPLETE
+# 🎉 Mallu Cupid - A Complete Social app & Content selling 
 
 ## ✅ Status: RESOLVED
 
