@@ -583,4 +583,280 @@ curl -X POST https://main.d19gr2nqobengq.amplifyapp.com/api/users/profile \
 
 ---
 
+## NEW FEATURES - API ENDPOINTS TO IMPLEMENT
+
+### CONNECTIONS FEATURE
+
+#### GET /api/connections
+Get all connections for the authenticated user
+- **Auth**: Required (JWT)
+- **Response**: `{ connections: [{ id, userId, userName, userImage, connectedAt }] }`
+
+#### GET /api/connections/search?query=
+Search connections by name
+- **Auth**: Required (JWT)
+- **Query**: `query` (string) - Search term
+- **Response**: `{ connections: [{ id, userId, userName, userImage }] }`
+
+#### GET /api/connections/requests
+Get all pending connection requests
+- **Auth**: Required (JWT)
+- **Response**: `{ requests: [{ id, senderId, senderName, senderImage, sentAt }] }`
+
+#### POST /api/connections/requests
+Send a connection request
+- **Auth**: Required (JWT)
+- **Body**: `{ userId: string }`
+- **Response**: `{ success: boolean, requestId: string }`
+
+#### POST /api/connections/requests/:requestId/accept
+Accept a connection request
+- **Auth**: Required (JWT)
+- **Response**: `{ success: boolean, connectionId: string }`
+
+#### POST /api/connections/requests/:requestId/reject
+Reject a connection request
+- **Auth**: Required (JWT)
+- **Response**: `{ success: boolean }`
+
+#### DELETE /api/connections/:connectionId
+Remove a connection
+- **Auth**: Required (JWT)
+- **Response**: `{ success: boolean }`
+
+#### GET /api/users/blocked
+Get all blocked users
+- **Auth**: Required (JWT)
+- **Response**: `{ blockedUsers: [{ id, userId, userName, userImage, blockedAt }] }`
+
+#### POST /api/users/block
+Block a user
+- **Auth**: Required (JWT)
+- **Body**: `{ userId: string, reason?: string }`
+- **Response**: `{ success: boolean }`
+
+#### DELETE /api/users/block/:userId
+Unblock a user
+- **Auth**: Required (JWT)
+- **Response**: `{ success: boolean }`
+
+#### POST /api/reports
+Report a user or post
+- **Auth**: Required (JWT)
+- **Body**: `{ reportedUserId?: string, postId?: string, reason: string, description?: string }`
+- **Response**: `{ success: boolean, reportId: string }`
+
+---
+
+### POSTS/FEED FEATURE
+
+#### GET /api/posts?page=1&limit=10
+Get paginated posts feed
+- **Auth**: Required (JWT)
+- **Query**: `page` (number), `limit` (number)
+- **Response**: 
+```json
+{
+  "posts": [{
+    "postId": "uuid",
+    "authorId": "uuid",
+    "authorName": "string",
+    "authorImage": "url",
+    "isVerified": boolean,
+    "description": "string",
+    "mediaUrl": "url",
+    "mediaType": "image|video|none",
+    "accessType": "free|paid",
+    "price": number,
+    "mood": "string",
+    "likeCount": number,
+    "commentCount": number,
+    "isLiked": boolean,
+    "hasAccess": boolean,
+    "createdAt": "timestamp"
+  }],
+  "hasMore": boolean,
+  "totalPages": number
+}
+```
+
+#### GET /api/posts/search?query=
+Search posts by author name
+- **Auth**: Required (JWT)
+- **Query**: `query` (string) - Author name
+- **Response**: Same as GET /api/posts
+
+#### GET /api/posts/:postId
+Get single post by ID
+- **Auth**: Required (JWT)
+- **Response**: Single post object (same structure as above)
+
+#### POST /api/posts
+Create a new post
+- **Auth**: Required (JWT)
+- **Content-Type**: `multipart/form-data`
+- **Body**:
+  - `description` (string, max 350) - Optional
+  - `media` (file) - Optional (image or video)
+  - `accessType` (string) - "free" or "paid"
+  - `price` (number) - Required if accessType is "paid"
+  - `mood` (string) - Optional (Happy, Loved, Excited, Sad, Angry, Grateful, Blessed, Motivated)
+- **Response**: `{ success: boolean, postId: string }`
+
+#### PUT /api/posts/:postId
+Update an existing post
+- **Auth**: Required (JWT - must be post author)
+- **Content-Type**: `multipart/form-data`
+- **Body**: Same as POST /api/posts
+- **Response**: `{ success: boolean }`
+
+#### DELETE /api/posts/:postId
+Delete a post
+- **Auth**: Required (JWT - must be post author)
+- **Response**: `{ success: boolean }`
+
+#### POST /api/posts/:postId/like
+Like a post
+- **Auth**: Required (JWT)
+- **Response**: `{ success: boolean, likeCount: number }`
+- **Note**: Also update post.like_count in posts table
+
+#### DELETE /api/posts/:postId/like
+Unlike a post
+- **Auth**: Required (JWT)
+- **Response**: `{ success: boolean, likeCount: number }`
+- **Note**: Also update post.like_count in posts table
+
+#### GET /api/posts/:postId/comments
+Get all comments for a post
+- **Auth**: Required (JWT)
+- **Response**: 
+```json
+{
+  "comments": [{
+    "commentId": "uuid",
+    "userId": "uuid",
+    "userName": "string",
+    "userImage": "url",
+    "content": "string",
+    "createdAt": "timestamp"
+  }]
+}
+```
+
+#### POST /api/posts/:postId/comments
+Add a comment to a post
+- **Auth**: Required (JWT)
+- **Body**: `{ content: string }`
+- **Response**: `{ success: boolean, commentId: string }`
+- **Note**: Also increment post.comment_count in posts table
+
+#### DELETE /api/posts/:postId/comments/:commentId
+Delete a comment
+- **Auth**: Required (JWT - must be comment author OR post author)
+- **Response**: `{ success: boolean }`
+- **Note**: Also decrement post.comment_count in posts table
+
+#### POST /api/posts/:postId/purchase
+Purchase access to a paid post
+- **Auth**: Required (JWT)
+- **Body**: `{ paymentMethod: string, transactionId: string }`
+- **Response**: `{ success: boolean, accessGranted: boolean }`
+- **Note**: Create entry in post_purchases table
+
+#### GET /api/posts/:postId/access
+Check if user has access to a paid post
+- **Auth**: Required (JWT)
+- **Response**: `{ hasAccess: boolean, isPurchased: boolean, isAuthor: boolean }`
+
+---
+
+### IMPLEMENTATION NOTES
+
+**Media Upload for Posts:**
+```typescript
+// Use multer-s3 for posts media
+const postsUpload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: process.env.AWS_S3_BUCKET!,
+    key: (req, file, cb) => {
+      const mediaType = file.mimetype.startsWith('image/') ? 'images' : 'videos';
+      cb(null, `posts/${mediaType}/${req.user.id}/${Date.now()}-${file.originalname}`);
+    }
+  }),
+  limits: { 
+    fileSize: file.mimetype.startsWith('image/') ? 10 * 1024 * 1024 : 100 * 1024 * 1024 // 10MB for images, 100MB for videos
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only images and videos allowed'));
+    }
+  }
+});
+```
+
+**Database Triggers for Counter Updates:**
+```sql
+-- Trigger to update like_count when post_likes row is inserted
+CREATE OR REPLACE FUNCTION increment_post_likes()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE posts SET like_count = like_count + 1 WHERE id = NEW.post_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_increment_post_likes
+AFTER INSERT ON post_likes
+FOR EACH ROW EXECUTE FUNCTION increment_post_likes();
+
+-- Trigger to update like_count when post_likes row is deleted
+CREATE OR REPLACE FUNCTION decrement_post_likes()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE posts SET like_count = like_count - 1 WHERE id = OLD.post_id;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_decrement_post_likes
+AFTER DELETE ON post_likes
+FOR EACH ROW EXECUTE FUNCTION decrement_post_likes();
+
+-- Similar triggers for comment_count
+CREATE OR REPLACE FUNCTION increment_post_comments()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE posts SET comment_count = comment_count + 1 WHERE id = NEW.post_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_increment_post_comments
+AFTER INSERT ON post_comments
+FOR EACH ROW EXECUTE FUNCTION increment_post_comments();
+
+CREATE OR REPLACE FUNCTION decrement_post_comments()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE posts SET comment_count = comment_count - 1 WHERE id = OLD.post_id;
+  RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_decrement_post_comments
+AFTER DELETE ON post_comments
+FOR EACH ROW EXECUTE FUNCTION decrement_post_comments();
+```
+
+**Authorization Checks:**
+- Posts can only be edited/deleted by their author
+- Comments can be deleted by the comment author OR the post author
+- Paid posts should check `post_purchases` table or verify user is the author before returning full content
+
+---
+
 For complete implementation, see the full backend repository.
