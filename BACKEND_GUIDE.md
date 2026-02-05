@@ -1,34 +1,72 @@
-# Backend API Template for Mallu Cupid
-# Node.js + Express + PostgreSQL
+# Backend API Guide for Mallu Cupid
+# Node.js + Express + Supabase (PostgreSQL) + AWS Cognito
+
+> **📘 See SUPABASE_SETUP.md for complete database setup guide**
+
+## Architecture
+
+```
+Frontend (Amplify) → AWS Cognito (Auth) → Node.js Backend → Supabase (Database)
+```
 
 ## Quick Start
 
 ```bash
-# Navigate to backend directory
-cd backend
+# 1. Set up Supabase (see SUPABASE_SETUP.md)
+# - Create project at supabase.com
+# - Run database-schema.sql in SQL Editor
+# - Get connection credentials
 
-# Install dependencies
+# 2. Create backend directory
+mkdir backend && cd backend
+
+# 3. Initialize Node.js project
+npm init -y
+
+# 4. Install dependencies (see below)
 npm install
 
-# Set up environment
-cp .env.example .env
+# 5. Set up environment
+cp ../.env.example .env
+# Edit .env with your Supabase credentials
 
-# Run database migrations
-npm run migrate
-
-# Start server
+# 6. Start development server
 npm run dev
 ```
 
 ## Required Dependencies
 
+```bash
+# Core dependencies
+npm install express cors dotenv helmet morgan
+npm install @supabase/supabase-js pg
+npm install jsonwebtoken jwks-rsa
+npm install multer multer-s3 aws-sdk
+npm install express-validator
+
+# TypeScript + Dev tools
+npm install -D typescript @types/node @types/express
+npm install -D @types/cors @types/jsonwebtoken
+npm install -D ts-node nodemon
+```
+
+**package.json example:**
 ```json
 {
+  "name": "mallucupid-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "nodemon src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
   "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
     "express": "^4.18.2",
     "pg": "^8.11.3",
     "aws-sdk": "^2.1480.0",
     "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.1.0",
     "multer": "^1.4.5-lts.1",
     "multer-s3": "^3.0.1",
     "cors": "^2.8.5",
@@ -40,6 +78,8 @@ npm run dev
   "devDependencies": {
     "@types/express": "^4.17.20",
     "@types/node": "^20.9.0",
+    "@types/cors": "^2.8.16",
+    "@types/jsonwebtoken": "^9.0.5",
     "typescript": "^5.2.2",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1"
@@ -49,30 +89,47 @@ npm run dev
 
 ## Environment Variables (.env)
 
+See `.env.example` for complete configuration. Key variables:
+
+See `.env.example` for complete configuration. Key variables:
+
 ```env
-NODE_ENV=development
-PORT=3000
+# Supabase Database
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_KEY=your-service-role-key
+DATABASE_URL=postgresql://postgres:password@db.your-project-ref.supabase.co:5432/postgres
 
-# Database
-DB_HOST=your-db-host
-DB_PORT=5432
-DB_NAME=mallucupid
-DB_USER=postgres
-DB_PASSWORD=yourpassword
+# AWS Cognito (Token Verification)
+COGNITO_USER_POOL_ID=us-east-1_lYGQMWQbj
+COGNITO_REGION=us-east-1
 
-# AWS
+# AWS S3 (Media Uploads)
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your-access-key
 AWS_SECRET_ACCESS_KEY=your-secret-key
 AWS_S3_BUCKET=mallucupid-images
 
-# Cognito
-COGNITO_USER_POOL_ID=us-east-1_XXXXXXXXX
-COGNITO_REGION=us-east-1
+# Server
+PORT=3000
+NODE_ENV=development
 
-# JWT (for additional verification if needed)
-JWT_SECRET=your-super-secret-key
+# CORS
+CORS_ORIGIN=https://main.d19gr2nqobengq.amplifyapp.com,http://localhost:5173
 ```
+
+## Database Setup
+
+**Option 1: Supabase Dashboard (Recommended)**
+1. Go to Supabase Dashboard → SQL Editor
+2. Copy entire `database-schema.sql` file
+3. Paste and run - creates all 14 tables automatically
+
+**Option 2: Command Line**
+```bash
+psql "postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres" < database-schema.sql
+```
+
+See **SUPABASE_SETUP.md** for detailed guide.
 
 ## API Endpoints Implementation
 

@@ -93,8 +93,9 @@ npm run preview
 - **[PRODUCTION_GUIDE.md](./PRODUCTION_GUIDE.md)** - Complete setup guide
 
 ### Backend & Database
+- **[SUPABASE_SETUP.md](./SUPABASE_SETUP.md)** - Complete Supabase database setup guide
 - **[BACKEND_GUIDE.md](./BACKEND_GUIDE.md)** - API implementation with role-based endpoints
-- **[database-schema.sql](./database-schema.sql)** - Database schema with roles
+- **[database-schema.sql](./database-schema.sql)** - PostgreSQL schema (14 tables)
 
 ### Role-Based Authentication
 - **[ROLE_BASED_AUTH.md](./ROLE_BASED_AUTH.md)** - Architecture and implementation
@@ -103,11 +104,13 @@ npm run preview
 ## 📦 Tech Stack
 
 - **Frontend:** React 19, TypeScript, Vite
-- **Authentication:** AWS Cognito
+- **Authentication:** AWS Cognito (JWT tokens)
+- **Database:** Supabase (Managed PostgreSQL)
+- **Backend:** Node.js + Express + TypeScript
 - **API Client:** Axios
-- **File Upload:** React Dropzone
+- **File Upload:** React Dropzone, Multer-S3
 - **Styling:** CSS with modern gradients
-- **Deployment:** AWS Amplify
+- **Deployment:** AWS Amplify (Frontend), AWS/Railway (Backend)
 
 ## 🏗️ Project Structure
 
@@ -164,12 +167,24 @@ src/
 
 ## 🚀 Environment Variables
 
+### Frontend (.env)
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `VITE_AWS_REGION` | AWS region for Cognito | Yes |
 | `VITE_AWS_USER_POOL_ID` | Cognito User Pool ID | Yes |
 | `VITE_AWS_CLIENT_ID` | Cognito App Client ID | Yes |
 | `VITE_API_BASE_URL` | Backend API URL | Yes |
+
+### Backend (backend/.env)
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `SUPABASE_URL` | Supabase project URL | Yes |
+| `SUPABASE_SERVICE_KEY` | Supabase service role key | Yes |
+| `DATABASE_URL` | PostgreSQL connection string | Yes |
+| `COGNITO_USER_POOL_ID` | For JWT verification | Yes |
+| `AWS_S3_BUCKET` | For media uploads | Yes |
+
+**See `.env.example` and `SUPABASE_SETUP.md` for complete configuration.**
 
 ## 🐛 Troubleshooting
 
