@@ -309,7 +309,6 @@ function ConnectionsView() {
 
 // Profile View Component
 function ProfileView({ signupData }: { signupData: any }) {
-  const [isEditing, setIsEditing] = useState(false);
   const [profile, setProfile] = useState({
     name: signupData.name || "",
     dateOfBirth: signupData.dateOfBirth || "",
@@ -317,269 +316,414 @@ function ProfileView({ signupData }: { signupData: any }) {
     email: signupData.email || "",
     lookingFor: signupData.lookingFor || "",
     relationshipType: signupData.relationshipType || "",
+    orientation: signupData.orientation || "",
     interests: signupData.interests || [],
     bio: signupData.bio || "",
     location: signupData.location || "",
+    profession: signupData.profession || "",
+    maritalStatus: signupData.maritalStatus || "",
+    images: signupData.images || []
   });
-  const [verificationStatus] = useState<string>("pending");
+  
+  const [verificationStatus] = useState<string>("pending"); // "pending", "approved", "rejected"
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showSetProfileConfirm, setShowSetProfileConfirm] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState<number | null>(null);
+  const [imageToSetAsProfile, setImageToSetAsProfile] = useState<number | null>(null);
 
-  const handleSave = async () => {
-    try {
-      await apiService.updateUserProfile(profile);
-      setIsEditing(false);
-    } catch (err) {
-      console.error("Failed to update profile", err);
+  // Dropdown data - these would come from backend
+  const locationOptions = ["Mumbai", "Delhi", "Bangalore", "Chennai", "Kolkata", "Hyderabad", "Pune", "Ahmedabad"];
+  const lookingForOptions = ["Men", "Women", "Everyone"];
+  const relationshipTypeOptions = ["Long-term", "Short-term", "Friendship", "Casual", "Marriage"];
+  const orientationOptions = ["Straight", "Gay", "Lesbian", "Bisexual", "Pansexual", "Asexual", "Other"];
+  const maritalStatusOptions = ["Single", "Divorced", "Widowed", "Separated"];
+
+  const handleImageNavigation = (direction: 'prev' | 'next') => {
+    if (direction === 'prev') {
+      setCurrentImageIndex((prev) => (prev === 0 ? profile.images.length - 1 : prev - 1));
+    } else {
+      setCurrentImageIndex((prev) => (prev === profile.images.length - 1 ? 0 : prev + 1));
     }
   };
 
+  const handleDeleteImage = (index: number) => {
+    setImageToDelete(index);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteImage = () => {
+    if (imageToDelete !== null && profile.images.length > 3) {
+      const newImages = profile.images.filter((_: any, i: number) => i !== imageToDelete);
+      setProfile({ ...profile, images: newImages });
+      setCurrentImageIndex(0);
+    }
+    setShowDeleteConfirm(false);
+    setImageToDelete(null);
+  };
+
+  const handleSetAsProfileImage = (index: number) => {
+    setImageToSetAsProfile(index);
+    setShowSetProfileConfirm(true);
+  };
+
+  const confirmSetAsProfileImage = () => {
+    if (imageToSetAsProfile !== null) {
+      const newImages = [...profile.images];
+      const [selectedImage] = newImages.splice(imageToSetAsProfile, 1);
+      newImages.unshift(selectedImage);
+      setProfile({ ...profile, images: newImages });
+      setCurrentImageIndex(0);
+    }
+    setShowSetProfileConfirm(false);
+    setImageToSetAsProfile(null);
+  };
+
+  const handleAddImages = () => {
+    // Trigger file input
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.onchange = (e: any) => {
+      const files = Array.from(e.target.files);
+      if (profile.images.length + files.length <= 10) {
+        setProfile({ ...profile, images: [...profile.images, ...files] });
+      } else {
+        alert('Maximum 10 images allowed');
+      }
+    };
+    input.click();
+  };
+
   const handleVerifyNow = () => {
-    // Navigate to verification or trigger verification modal
-    console.log("Verify now clicked");
+    console.log("Navigate to verification");
+    // Navigate to verification page
   };
 
-  const interestOptions = [
-    "Travel", "Music", "Movies", "Sports", "Reading", "Gaming",
-    "Cooking", "Photography", "Art", "Fitness", "Dancing", "Pets"
-  ];
-
-  const toggleInterest = (interest: string) => {
-    setProfile(prev => ({
-      ...prev,
-      interests: prev.interests.includes(interest)
-        ? prev.interests.filter((i: string) => i !== interest)
-        : [...prev.interests, interest]
-    }));
+  const handleExclusiveGallery = () => {
+    console.log("Navigate to exclusive gallery");
+    // Navigate to exclusive gallery page
   };
+
+  const handleSignOut = () => {
+    setShowSignOutConfirm(true);
+  };
+
+  const confirmSignOut = async () => {
+    try {
+      await authService.signOut();
+      window.location.reload();
+    } catch (err) {
+      console.error("Failed to sign out", err);
+    }
+  };
+
+  const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    if (value.length <= 350) {
+      setProfile({ ...profile, bio: value });
+    }
+  };
+
+  const isVerified = verificationStatus === "approved";
+  const canChangeLocation = !isVerified;
 
   return (
     <div className="profile-view">
-      <div className="section-header">
-        <h2>My Profile</h2>
-        <button 
-          className="edit-toggle-btn"
-          onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-        >
-          {isEditing ? "Save" : "Edit"}
-        </button>
+      {/* Image Carousel Section */}
+      <div className="profile-images-section">
+        {profile.images.length > 0 ? (
+          <div className="image-carousel">
+            <div className="carousel-main">
+              <img 
+                src={typeof profile.images[currentImageIndex] === 'string' 
+                  ? profile.images[currentImageIndex] 
+                  : URL.createObjectURL(profile.images[currentImageIndex])} 
+                alt={`Profile ${currentImageIndex + 1}`}
+                className="carousel-image"
+              />
+              
+              {/* Delete Icon */}
+              <button 
+                className="carousel-delete-btn"
+                onClick={() => handleDeleteImage(currentImageIndex)}
+                disabled={profile.images.length <= 3}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/>
+                </svg>
+              </button>
+
+              {/* Navigation Arrows */}
+              {profile.images.length > 1 && (
+                <>
+                  <button className="carousel-nav prev" onClick={() => handleImageNavigation('prev')}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                  </button>
+                  <button className="carousel-nav next" onClick={() => handleImageNavigation('next')}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                  </button>
+                </>
+              )}
+
+              {/* Image Counter */}
+              <div className="image-counter">
+                {currentImageIndex + 1} / {profile.images.length}
+              </div>
+            </div>
+
+            {/* Set as Profile Button */}
+            {currentImageIndex !== 0 && (
+              <button 
+                className="set-profile-btn"
+                onClick={() => handleSetAsProfileImage(currentImageIndex)}
+              >
+                Set as Profile Image
+              </button>
+            )}
+
+            {/* Add More Images */}
+            {profile.images.length < 10 && (
+              <button className="add-images-btn" onClick={handleAddImages}>
+                + Add More Images ({profile.images.length}/10)
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="no-images">
+            <p>No images uploaded</p>
+            <button className="add-images-btn" onClick={handleAddImages}>
+              + Add Images (Min 3, Max 10)
+            </button>
+          </div>
+        )}
       </div>
-      
+
       <div className="profile-content">
-        {/* Profile Images */}
-        <div className="profile-images-grid">
-          {signupData.images?.[0] ? (
-            <div className="profile-image-item main">
-              <img src={URL.createObjectURL(signupData.images[0])} alt="Profile" />
-              {isEditing && <div className="image-overlay">Change</div>}
+        {/* Name and Verification */}
+        <div className="profile-name-section">
+          <h2 className="profile-name">{profile.name}</h2>
+          {isVerified ? (
+            <div className="verified-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+              </svg>
+              <span>Verified</span>
             </div>
           ) : (
-            <div className="profile-image-item main placeholder">
-              <span>Add Photo</span>
-            </div>
-          )}
-          {[1, 2].map((index) => (
-            <div key={index} className="profile-image-item placeholder">
-              {signupData.images?.[index] ? (
-                <>
-                  <img src={URL.createObjectURL(signupData.images[index])} alt={`Photo ${index + 1}`} />
-                  {isEditing && <div className="image-overlay">Change</div>}
-                </>
-              ) : (
-                <span>+</span>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Verification Status */}
-        <div className={`verification-banner ${verificationStatus}`}>
-          <div className="verification-content">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
-            <div>
-              <span className="verification-label">Verification Status</span>
-              <span className="verification-status-text">
-                {verificationStatus === "approved" ? "Verified" : 
-                 verificationStatus === "pending" ? "Pending Review" : "Not Verified"}
-              </span>
-            </div>
-          </div>
-          {verificationStatus !== "approved" && (
-            <button className="verify-now-btn" onClick={handleVerifyNow}>
-              Verify Now
+            <button className="verify-small-btn" onClick={handleVerifyNow}>
+              Verify Account
             </button>
           )}
         </div>
 
-        {/* Profile Details Form */}
-        <div className="profile-form">
-          {/* Basic Information */}
-          <div className="form-section">
-            <h3 className="section-title">Basic Information</h3>
-            
-            <div className="form-field">
-              <label>Full Name</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={profile.name}
-                  onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                  className="profile-input"
-                />
-              ) : (
-                <div className="profile-value">{profile.name || "Not provided"}</div>
-              )}
-            </div>
+        {/* Exclusive Gallery Button */}
+        <button className="exclusive-gallery-btn" onClick={handleExclusiveGallery}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <path d="M21 15l-5-5L5 21"/>
+          </svg>
+          My Exclusive Gallery
+        </button>
 
-            <div className="form-field">
-              <label>Date of Birth</label>
-              {isEditing ? (
-                <input
-                  type="date"
-                  value={profile.dateOfBirth}
-                  onChange={(e) => setProfile({ ...profile, dateOfBirth: e.target.value })}
-                  className="profile-input"
-                />
-              ) : (
-                <div className="profile-value">
-                  {profile.dateOfBirth 
-                    ? `${new Date(profile.dateOfBirth).toLocaleDateString()} (Age: ${calculateAge(profile.dateOfBirth)})`
-                    : "Not provided"}
-                </div>
-              )}
+        {/* Basic Information */}
+        <div className="form-section">
+          <h3 className="section-title">Basic Information</h3>
+          
+          <div className="form-field readonly">
+            <label>Date of Birth</label>
+            <div className="profile-value">
+              {profile.dateOfBirth 
+                ? `${new Date(profile.dateOfBirth).toLocaleDateString()} (Age: ${calculateAge(profile.dateOfBirth)})`
+                : "Not provided"}
             </div>
+          </div>
 
-            <div className="form-field">
-              <label>Gender</label>
-              {isEditing ? (
-                <select
-                  value={profile.gender}
-                  onChange={(e) => setProfile({ ...profile, gender: e.target.value })}
-                  className="profile-input"
-                >
-                  <option value="">Select gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Non-binary">Non-binary</option>
-                  <option value="Other">Other</option>
-                </select>
-              ) : (
-                <div className="profile-value">{profile.gender || "Not specified"}</div>
-              )}
-            </div>
+          <div className="form-field readonly">
+            <label>Gender</label>
+            <div className="profile-value">{profile.gender || "Not specified"}</div>
+          </div>
 
-            <div className="form-field">
-              <label>Email</label>
-              <div className="profile-value">{profile.email || "Not provided"}</div>
-              <span className="field-note">Email cannot be changed</span>
-            </div>
+          <div className="form-field readonly">
+            <label>Email</label>
+            <div className="profile-value">{profile.email || "Not provided"}</div>
+          </div>
 
-            <div className="form-field">
-              <label>Location</label>
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={profile.location}
-                  onChange={(e) => setProfile({ ...profile, location: e.target.value })}
-                  className="profile-input"
-                  placeholder="City, Country"
-                />
-              ) : (
+          <div className="form-field">
+            <label>Location</label>
+            {canChangeLocation ? (
+              <select
+                value={profile.location}
+                onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+                className="profile-input"
+              >
+                <option value="">Select location</option>
+                {locationOptions.map((loc) => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
+            ) : (
+              <>
                 <div className="profile-value">{profile.location || "Not specified"}</div>
-              )}
-            </div>
+                <span className="field-note">Location is locked after verification</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Bio */}
+        <div className="form-section">
+          <h3 className="section-title">About Me</h3>
+          <div className="form-field">
+            <label>Bio <span className="char-count">({profile.bio.length}/350)</span></label>
+            <textarea
+              value={profile.bio}
+              onChange={handleBioChange}
+              className="profile-textarea"
+              placeholder="Tell others about yourself..."
+              rows={4}
+              maxLength={350}
+            />
+          </div>
+        </div>
+
+        {/* Preferences */}
+        <div className="form-section">
+          <h3 className="section-title">Preferences</h3>
+          
+          <div className="form-field">
+            <label>Looking For</label>
+            <select
+              value={profile.lookingFor}
+              onChange={(e) => setProfile({ ...profile, lookingFor: e.target.value })}
+              className="profile-input"
+            >
+              <option value="">Select preference</option>
+              {lookingForOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
           </div>
 
-          {/* About Me */}
-          <div className="form-section">
-            <h3 className="section-title">About Me</h3>
-            
-            <div className="form-field">
-              <label>Bio</label>
-              {isEditing ? (
-                <textarea
-                  value={profile.bio}
-                  onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                  className="profile-textarea"
-                  placeholder="Tell others about yourself..."
-                  rows={4}
-                />
-              ) : (
-                <div className="profile-value">{profile.bio || "No bio added yet"}</div>
-              )}
-            </div>
+          <div className="form-field">
+            <label>Relationship Type</label>
+            <select
+              value={profile.relationshipType}
+              onChange={(e) => setProfile({ ...profile, relationshipType: e.target.value })}
+              className="profile-input"
+            >
+              <option value="">Select type</option>
+              {relationshipTypeOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
           </div>
 
-          {/* Preferences */}
-          <div className="form-section">
-            <h3 className="section-title">Dating Preferences</h3>
-            
-            <div className="form-field">
-              <label>Looking For</label>
-              {isEditing ? (
-                <select
-                  value={profile.lookingFor}
-                  onChange={(e) => setProfile({ ...profile, lookingFor: e.target.value })}
-                  className="profile-input"
-                >
-                  <option value="">Select preference</option>
-                  <option value="Men">Men</option>
-                  <option value="Women">Women</option>
-                  <option value="Everyone">Everyone</option>
-                </select>
-              ) : (
-                <div className="profile-value">{profile.lookingFor || "Not specified"}</div>
-              )}
-            </div>
+          <div className="form-field">
+            <label>Orientation</label>
+            <select
+              value={profile.orientation}
+              onChange={(e) => setProfile({ ...profile, orientation: e.target.value })}
+              className="profile-input"
+            >
+              <option value="">Select orientation</option>
+              {orientationOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-            <div className="form-field">
-              <label>Relationship Type</label>
-              {isEditing ? (
-                <select
-                  value={profile.relationshipType}
-                  onChange={(e) => setProfile({ ...profile, relationshipType: e.target.value })}
-                  className="profile-input"
-                >
-                  <option value="">Select type</option>
-                  <option value="Long-term">Long-term</option>
-                  <option value="Short-term">Short-term</option>
-                  <option value="Friendship">Friendship</option>
-                  <option value="Casual">Casual</option>
-                </select>
-              ) : (
-                <div className="profile-value">{profile.relationshipType || "Not specified"}</div>
-              )}
-            </div>
+        {/* Additional Info */}
+        <div className="form-section">
+          <h3 className="section-title">Additional Information</h3>
+          
+          <div className="form-field">
+            <label>Profession</label>
+            <input
+              type="text"
+              value={profile.profession}
+              onChange={(e) => setProfile({ ...profile, profession: e.target.value })}
+              className="profile-input"
+              placeholder="Enter your profession"
+            />
           </div>
 
-          {/* Interests */}
-          <div className="form-section">
-            <h3 className="section-title">Interests</h3>
-            <div className="interests-grid">
-              {isEditing ? (
-                interestOptions.map((interest) => (
-                  <button
-                    key={interest}
-                    className={`interest-chip ${profile.interests.includes(interest) ? "selected" : ""}`}
-                    onClick={() => toggleInterest(interest)}
-                  >
-                    {interest}
-                  </button>
-                ))
-              ) : (
-                profile.interests.length > 0 ? (
-                  profile.interests.map((interest: string) => (
-                    <span key={interest} className="interest-tag">{interest}</span>
-                  ))
-                ) : (
-                  <div className="profile-value">No interests added</div>
-                )
-              )}
+          <div className="form-field">
+            <label>Marital Status</label>
+            <select
+              value={profile.maritalStatus}
+              onChange={(e) => setProfile({ ...profile, maritalStatus: e.target.value })}
+              className="profile-input"
+            >
+              <option value="">Select status</option>
+              {maritalStatusOptions.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Footer Links */}
+        <div className="profile-footer">
+          <a href="#help" className="footer-link">Help & Support</a>
+          <a href="#terms" className="footer-link">Terms of Service</a>
+          <a href="#privacy" className="footer-link">Privacy Policy</a>
+          <button className="signout-btn" onClick={handleSignOut}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+            </svg>
+            Sign Out
+          </button>
+        </div>
+      </div>
+
+      {/* Confirmation Dialogs */}
+      {showDeleteConfirm && (
+        <div className="confirmation-overlay">
+          <div className="confirmation-dialog">
+            <h3>Delete Image?</h3>
+            <p>Are you sure you want to delete this image? This action cannot be undone.</p>
+            <div className="dialog-actions">
+              <button className="cancel-btn" onClick={() => setShowDeleteConfirm(false)}>Cancel</button>
+              <button className="confirm-btn delete" onClick={confirmDeleteImage}>Delete</button>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {showSetProfileConfirm && (
+        <div className="confirmation-overlay">
+          <div className="confirmation-dialog">
+            <h3>Set as Profile Image?</h3>
+            <p>This image will be shown first to other users.</p>
+            <div className="dialog-actions">
+              <button className="cancel-btn" onClick={() => setShowSetProfileConfirm(false)}>Cancel</button>
+              <button className="confirm-btn" onClick={confirmSetAsProfileImage}>Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSignOutConfirm && (
+        <div className="confirmation-overlay">
+          <div className="confirmation-dialog">
+            <h3>Sign Out?</h3>
+            <p>Are you sure you want to sign out of your account?</p>
+            <div className="dialog-actions">
+              <button className="cancel-btn" onClick={() => setShowSignOutConfirm(false)}>Cancel</button>
+              <button className="confirm-btn" onClick={confirmSignOut}>Sign Out</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

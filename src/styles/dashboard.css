@@ -664,3 +664,382 @@
   font-size: 14px;
   margin-top: 20px;
 }
+
+/* === NEW PROFILE PAGE STYLES === */
+
+/* Image Carousel Section */
+.profile-images-section {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.image-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.carousel-main {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.carousel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carousel-delete-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 59, 48, 0.95);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.carousel-delete-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.carousel-delete-btn:not(:disabled):active {
+  transform: scale(0.92);
+  background: rgba(255, 59, 48, 1);
+}
+
+.carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.carousel-nav:active {
+  transform: translateY(-50%) scale(0.9);
+}
+
+.carousel-nav.prev {
+  left: 12px;
+}
+
+.carousel-nav.next {
+  right: 12px;
+}
+
+.image-counter {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+}
+
+.set-profile-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.set-profile-btn:active {
+  transform: scale(0.98);
+}
+
+.add-images-btn {
+  width: 100%;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f6f2ff;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-images-btn:active {
+  transform: scale(0.98);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.no-images {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.no-images p {
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+  font-size: 16px;
+}
+
+/* Name and Verification Section */
+.profile-name-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.profile-name {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  color: #f6f2ff;
+}
+
+.verified-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #4CAF50 0%, #66bb6a 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.verified-badge svg {
+  flex-shrink: 0;
+}
+
+.verify-small-btn {
+  padding: 8px 14px;
+  background: rgba(255, 167, 38, 0.9);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.verify-small-btn:active {
+  transform: scale(0.95);
+}
+
+/* Exclusive Gallery Button */
+.exclusive-gallery-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #ff6b9d 0%, #c86dd7 100%);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  transition: all 0.2s ease;
+}
+
+.exclusive-gallery-btn:active {
+  transform: scale(0.98);
+}
+
+/* Form Field Readonly */
+.form-field.readonly .profile-value {
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Character Count */
+.char-count {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 400;
+}
+
+/* Profile Footer */
+.profile-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px 0;
+  margin-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-link {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  font-size: 15px;
+  padding: 12px 0;
+  transition: all 0.2s ease;
+}
+
+.footer-link:hover {
+  color: #667eea;
+}
+
+.signout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 16px;
+  background: rgba(255, 59, 48, 0.15);
+  border: 2px solid rgba(255, 59, 48, 0.4);
+  border-radius: 12px;
+  color: #ff6b6b;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.signout-btn:active {
+  transform: scale(0.98);
+  background: rgba(255, 59, 48, 0.25);
+}
+
+/* Confirmation Dialog Overlay */
+.confirmation-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.confirmation-dialog {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 28px;
+  max-width: 400px;
+  width: 100%;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.confirmation-dialog h3 {
+  margin: 0 0 12px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #f6f2ff;
+}
+
+.confirmation-dialog p {
+  margin: 0 0 24px 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.cancel-btn,
+.confirm-btn {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f6f2ff;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.cancel-btn:active {
+  transform: scale(0.97);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.confirm-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.confirm-btn.delete {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+}
+
+.confirm-btn:active {
+  transform: scale(0.97);
+}
