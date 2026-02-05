@@ -401,9 +401,29 @@ useEffect(() => {
 3. **Storage → Policies**: Configure RLS policies if using Supabase Storage
 4. **API → Settings**: Add production domains to CORS allowed origins
 
-### Backend Deployment Options
+### Backend Deployment
 
-#### Option 1: Railway (Recommended - Free Tier Available)
+**Recommended: AWS (Unified with your Amplify + Cognito)**
+
+See **[AWS_BACKEND_DEPLOYMENT.md](./AWS_BACKEND_DEPLOYMENT.md)** for complete guide with 3 AWS options:
+1. **Elastic Beanstalk** (Easiest, traditional)
+2. **App Runner** (Container-based)
+3. **Lambda + API Gateway** (Serverless, lowest cost)
+
+**Quick AWS Elastic Beanstalk:**
+```bash
+cd backend
+pip install awsebcli --upgrade
+eb init -p node.js-18 mallucupid-backend --region us-east-1
+eb create mallucupid-prod --single
+eb setenv SUPABASE_URL=... SUPABASE_SERVICE_KEY=... DATABASE_URL=... 
+eb deploy
+```
+
+**Alternative: Railway or Render** (If you prefer non-AWS)
+
+<details>
+<summary>Click to expand Railway deployment</summary>
 
 ```bash
 # Install Railway CLI
@@ -438,7 +458,15 @@ railway domain
 VITE_API_BASE_URL=https://your-app.up.railway.app
 ```
 
-#### Option 2: Render (Free Tier)
+Or with Railway custom domain:
+```bash
+railway domain add api.mallucupid.com
+# Add CNAME: api.mallucupid.com → your-app.up.railway.app
+```
+</details>
+
+<details>
+<summary>Click to expand Render deployment</summary>
 
 1. Go to https://render.com → New → Web Service
 2. Connect your GitHub repository
@@ -452,51 +480,27 @@ VITE_API_BASE_URL=https://your-app.up.railway.app
 
 **Your backend URL**: `https://mallucupid-backend.onrender.com`
 
-#### Option 3: AWS App Runner
+Add custom domain in Render dashboard → Custom Domain → `api.mallucupid.com`
+</details>
+
+---
+
+### Frontend Updates
+
+After deploying backend to AWS (or alternative), update frontend:
 
 ```bash
-# Build and push Docker image
-cd backend
-docker build -t mallucupid-backend .
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin [ECR-URL]
-docker push [ECR-URL]/mallucupid-backend
+cd /workspaces/Fanszone
 
-# Create App Runner service via console
-# Add environment variables
-# Connect to ECR image
-```
+# Update .env with your backend URL
+echo "VITE_API_BASE_URL=https://mallucupid-prod.us-east-1.elasticbeanstalk.com" > .env
+# Or: echo "VITE_API_BASE_URL=https://api.mallucupid.com" > .env
 
-### Frontend Deployment
-
-```bash
-# Update .env with production backend URL
-echo "VITE_API_BASE_URL=https://your-backend-url.com" > .env
-
-# Build
-npm run build
-
-# Amplify auto-deploys on git push
-git add .
-git commit -m "Update API URL for production"
+# Commit and deploy
+git add .env
+git commit -m "Connect to production backend"
 git push
-```
-
-### Custom Domain Setup (api.mallucupid.com)
-
-**For Railway:**
-```bash
-railway domain add api.mallucupid.com
-# Add CNAME record in your DNS:
-# api.mallucupid.com → your-app.up.railway.app
-```
-
-**For Render:**
-- Render Dashboard → Custom Domain → Add `api.mallucupid.com`
-- Add CNAME: `api.mallucupid.com` → `mallucupid-backend.onrender.com`
-
-**Update frontend:**
-```env
-VITE_API_BASE_URL=https://api.mallucupid.com
+# Amplify auto-deploys ✅
 ```
 
 ---

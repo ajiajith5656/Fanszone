@@ -93,6 +93,7 @@ npm run preview
 - **[PRODUCTION_GUIDE.md](./PRODUCTION_GUIDE.md)** - Complete setup guide
 
 ### Backend & Database
+- **[AWS_BACKEND_DEPLOYMENT.md](./AWS_BACKEND_DEPLOYMENT.md)** - Deploy backend to AWS (Elastic Beanstalk, App Runner, Lambda)
 - **[SUPABASE_SETUP.md](./SUPABASE_SETUP.md)** - Complete Supabase database setup guide
 - **[BACKEND_GUIDE.md](./BACKEND_GUIDE.md)** - API implementation with role-based endpoints
 - **[database-schema.sql](./database-schema.sql)** - PostgreSQL schema (14 tables)

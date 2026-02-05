@@ -11,37 +11,43 @@ Frontend (Amplify) → AWS Cognito (Auth) → Node.js Backend → Supabase (Data
 
 ## Quick Start - Production Deployment
 
-**Recommended: Deploy to Railway or Render (Free tier available)**
+**Deploy to AWS (Recommended - Unified with your Amplify + Cognito stack)**
 
-### Option 1: Railway (Recommended)
+See **[AWS_BACKEND_DEPLOYMENT.md](./AWS_BACKEND_DEPLOYMENT.md)** for complete AWS deployment guide.
+
+### Quick AWS Elastic Beanstalk Deploy
+
 ```bash
-# 1. Install Railway CLI
-npm install -g @railway/cli
+cd /workspaces/Fanszone/backend
 
-# 2. Login and create project
-railway login
-railway init
+# Install EB CLI
+pip install awsebcli --upgrade
 
-# 3. Add environment variables
-railway variables set SUPABASE_URL=https://your-project.supabase.co
-railway variables set SUPABASE_SERVICE_KEY=your-service-key
-railway variables set DATABASE_URL=postgresql://...
-railway variables set COGNITO_USER_POOL_ID=us-east-1_lYGQMWQbj
-railway variables set COGNITO_REGION=us-east-1
+# Initialize
+eb init -p node.js-18 mallucupid-backend --region us-east-1
 
-# 4. Deploy
-railway up
+# Create environment
+eb create mallucupid-prod --single
+
+# Set environment variables
+eb setenv \
+  SUPABASE_URL=https://your-project.supabase.co \
+  SUPABASE_SERVICE_KEY=your-key \
+  DATABASE_URL=postgresql://... \
+  COGNITO_USER_POOL_ID=us-east-1_lYGQMWQbj \
+  COGNITO_REGION=us-east-1
+
+# Deploy
+eb deploy
+
+# Get URL
+eb status
 ```
 
-### Option 2: Render
-1. Go to https://render.com
-2. Create new Web Service from GitHub repo
-3. Build command: `cd backend && npm install && npm run build`
-4. Start command: `cd backend && npm start`
-5. Add environment variables in dashboard
-
-### Option 3: AWS (Elastic Beanstalk or App Runner)
-See deployment section below for AWS setup.
+**Alternative Options:**
+- **Railway / Render**: See SUPABASE_SETUP.md (easier but separate from AWS)
+- **AWS Lambda**: Serverless option (see AWS_BACKEND_DEPLOYMENT.md)
+- **AWS App Runner**: Container-based (see AWS_BACKEND_DEPLOYMENT.md)
 
 ## Required Dependencies
 
