@@ -9,30 +9,39 @@
 Frontend (Amplify) → AWS Cognito (Auth) → Node.js Backend → Supabase (Database)
 ```
 
-## Quick Start
+## Quick Start - Production Deployment
 
+**Recommended: Deploy to Railway or Render (Free tier available)**
+
+### Option 1: Railway (Recommended)
 ```bash
-# 1. Set up Supabase (see SUPABASE_SETUP.md)
-# - Create project at supabase.com
-# - Run database-schema.sql in SQL Editor
-# - Get connection credentials
+# 1. Install Railway CLI
+npm install -g @railway/cli
 
-# 2. Create backend directory
-mkdir backend && cd backend
+# 2. Login and create project
+railway login
+railway init
 
-# 3. Initialize Node.js project
-npm init -y
+# 3. Add environment variables
+railway variables set SUPABASE_URL=https://your-project.supabase.co
+railway variables set SUPABASE_SERVICE_KEY=your-service-key
+railway variables set DATABASE_URL=postgresql://...
+railway variables set COGNITO_USER_POOL_ID=us-east-1_lYGQMWQbj
+railway variables set COGNITO_REGION=us-east-1
 
-# 4. Install dependencies (see below)
-npm install
-
-# 5. Set up environment
-cp ../.env.example .env
-# Edit .env with your Supabase credentials
-
-# 6. Start development server
-npm run dev
+# 4. Deploy
+railway up
 ```
+
+### Option 2: Render
+1. Go to https://render.com
+2. Create new Web Service from GitHub repo
+3. Build command: `cd backend && npm install && npm run build`
+4. Start command: `cd backend && npm start`
+5. Add environment variables in dashboard
+
+### Option 3: AWS (Elastic Beanstalk or App Runner)
+See deployment section below for AWS setup.
 
 ## Required Dependencies
 
@@ -87,11 +96,7 @@ npm install -D ts-node nodemon
 }
 ```
 
-## Environment Variables (.env)
-
-See `.env.example` for complete configuration. Key variables:
-
-See `.env.example` for complete configuration. Key variables:
+## Environment Variables (Production)
 
 ```env
 # Supabase Database
@@ -111,10 +116,10 @@ AWS_S3_BUCKET=mallucupid-images
 
 # Server
 PORT=3000
-NODE_ENV=development
+NODE_ENV=production
 
-# CORS
-CORS_ORIGIN=https://main.d19gr2nqobengq.amplifyapp.com,http://localhost:5173
+# CORS (Your production domains)
+CORS_ORIGIN=https://main.d19gr2nqobengq.amplifyapp.com,https://www.mallucupid.com,https://mallucupid.com
 ```
 
 ## Database Setup

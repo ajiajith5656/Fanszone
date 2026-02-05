@@ -79,22 +79,22 @@ You'll need:
 
 **Frontend**: Update `.env` (for Vite)
 ```env
-# AWS Cognito (Keep existing)
+# AWS Cognito
 VITE_AWS_REGION=us-east-1
 VITE_AWS_USER_POOL_ID=us-east-1_lYGQMWQbj
 VITE_AWS_CLIENT_ID=60i5mqvn9r9ovvfhmco6qojkk3
 
-# Backend API
-VITE_API_BASE_URL=http://localhost:3000
+# Backend API (Production)
+VITE_API_BASE_URL=https://api.mallucupid.com
 
-# Supabase (Optional - only if using Supabase Auth client-side)
+# Supabase (Optional - only if using Supabase client-side features like real-time)
 # VITE_SUPABASE_URL=https://[project-ref].supabase.co
 # VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 **Backend**: Create `backend/.env`
 ```env
-NODE_ENV=development
+NODE_ENV=production
 PORT=3000
 
 # Supabase Database
@@ -112,11 +112,11 @@ AWS_ACCESS_KEY_ID=your-access-key
 AWS_SECRET_ACCESS_KEY=your-secret-key
 AWS_S3_BUCKET=mallucupid-images
 
-# JWT Secret (additional verification if needed)
+# JWT Secret
 JWT_SECRET=your-super-secret-key-change-this
 
-# CORS Origins
-CORS_ORIGIN=https://main.d19gr2nqobengq.amplifyapp.com,http://localhost:5173
+# CORS (Production domains)
+CORS_ORIGIN=https://main.d19gr2nqobengq.amplifyapp.com,https://www.mallucupid.com,https://mallucupid.com
 ```
 
 ---
@@ -392,27 +392,112 @@ useEffect(() => {
 
 ---
 
-## Step 8: Deployment Checklist
+## Step 8: Production Deployment
 
 ### Supabase Production Settings
 
-1. **Database → Settings → Connection Pooling**: Enable Supavisor (connection pooling)
-2. **Authentication → Providers**: Disable unused auth (you're using Cognito)
-3. **Storage → Policies**: Set up RLS policies if using Supabase Storage
-4. **API → Settings**: Add production URL to CORS allowed origins
+1. **Database → Settings → Connection Pooling**: Enable Supavisor for better performance
+2. **Authentication → Providers**: Disable unused auth providers (using Cognito)
+3. **Storage → Policies**: Configure RLS policies if using Supabase Storage
+4. **API → Settings**: Add production domains to CORS allowed origins
 
-### Backend Deployment (AWS, Heroku, Railway, etc.)
+### Backend Deployment Options
 
-1. Set production environment variables
-2. Update `CORS_ORIGIN` with Amplify URL
-3. Use connection pooling URL for better performance
-4. Enable database SSL in production
-5. Set up monitoring/logging
+#### Option 1: Railway (Recommended - Free Tier Available)
 
-### Frontend Updates
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
 
-1. Update `VITE_API_BASE_URL` to production backend URL
-2. Build and deploy: `npm run build && amplify publish`
+# Login
+railway login
+
+# Initialize project in backend folder
+cd backend
+railway init
+
+# Add environment variables
+railway variables set SUPABASE_URL=https://your-project.supabase.co
+railway variables set SUPABASE_SERVICE_KEY=your-key
+railway variables set DATABASE_URL=postgresql://...
+railway variables set COGNITO_USER_POOL_ID=us-east-1_lYGQMWQbj
+railway variables set COGNITO_REGION=us-east-1
+railway variables set AWS_S3_BUCKET=mallucupid-images
+railway variables set CORS_ORIGIN=https://main.d19gr2nqobengq.amplifyapp.com,https://www.mallucupid.com
+
+# Deploy
+railway up
+
+# Get your backend URL
+railway domain
+# Example: https://your-app.up.railway.app
+```
+
+**Update frontend `.env`:**
+```env
+VITE_API_BASE_URL=https://your-app.up.railway.app
+```
+
+#### Option 2: Render (Free Tier)
+
+1. Go to https://render.com → New → Web Service
+2. Connect your GitHub repository
+3. Settings:
+   - **Name**: mallucupid-backend
+   - **Root Directory**: backend
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm start`
+4. Add environment variables in dashboard
+5. Deploy
+
+**Your backend URL**: `https://mallucupid-backend.onrender.com`
+
+#### Option 3: AWS App Runner
+
+```bash
+# Build and push Docker image
+cd backend
+docker build -t mallucupid-backend .
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin [ECR-URL]
+docker push [ECR-URL]/mallucupid-backend
+
+# Create App Runner service via console
+# Add environment variables
+# Connect to ECR image
+```
+
+### Frontend Deployment
+
+```bash
+# Update .env with production backend URL
+echo "VITE_API_BASE_URL=https://your-backend-url.com" > .env
+
+# Build
+npm run build
+
+# Amplify auto-deploys on git push
+git add .
+git commit -m "Update API URL for production"
+git push
+```
+
+### Custom Domain Setup (api.mallucupid.com)
+
+**For Railway:**
+```bash
+railway domain add api.mallucupid.com
+# Add CNAME record in your DNS:
+# api.mallucupid.com → your-app.up.railway.app
+```
+
+**For Render:**
+- Render Dashboard → Custom Domain → Add `api.mallucupid.com`
+- Add CNAME: `api.mallucupid.com` → `mallucupid-backend.onrender.com`
+
+**Update frontend:**
+```env
+VITE_API_BASE_URL=https://api.mallucupid.com
+```
 
 ---
 
