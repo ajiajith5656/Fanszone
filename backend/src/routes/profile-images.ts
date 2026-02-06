@@ -5,7 +5,7 @@ import {
   uploadProfileImage,
   deleteProfileImage,
   listUserImages,
-  deleteAllUserImages,
+  deleteUserImages,
 } from '../services/s3.service';
 
 const router = Router();
@@ -25,25 +25,25 @@ router.post(
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
-      if (!req.user?.sub) {
+      if (!req.user?.uid) {
         return res.status(401).json({ error: 'User ID not found' });
       }
 
-      // Upload to S3 with user ID as folder name
-      const result = await uploadProfileImage(req.user.sub, {
+      // Upload to Firebase Storage with user ID as folder name
+      const result = await uploadProfileImage(req.user.uid, {
         buffer: req.file.buffer,
         mimetype: req.file.mimetype,
         originalname: req.file.originalname,
       });
 
       // TODO: Save image URL to database (user_images table)
-      // await query('INSERT INTO user_images (user_id, image_url, s3_key) VALUES ($1, $2, $3)', 
-      //   [req.user.sub, result.url, result.key]);
+      // await query('INSERT INTO user_images (user_id, image_url, storage_path) VALUES ($1, $2, $3)', 
+      //   [req.user.uid, result.url, result.path]);
 
       res.status(201).json({
         message: 'Profile image uploaded successfully',
         imageUrl: result.url,
-        key: result.key,
+        path: result.path,
       });
     } catch (error: any) {
       console.error('Error uploading profile image:', error);
@@ -67,7 +67,7 @@ router.post(
         return res.status(400).json({ error: 'No files uploaded' });
       }
 
-      if (!req.user?.sub) {
+      if (!req.user?.uid) {
         return res.status(401).json({ error: 'User ID not found' });
       }
 
@@ -75,7 +75,7 @@ router.post(
 
       // Upload each file
       for (const file of req.files) {
-        const result = await uploadProfileImage(req.user.sub, {
+        const result = await uploadProfileImage(req.user.uid, {
           buffer: file.buffer,
           mimetype: file.mimetype,
           originalname: file.originalname,
@@ -84,8 +84,8 @@ router.post(
         uploadResults.push(result);
 
         // TODO: Save to database
-        // await query('INSERT INTO user_images (user_id, image_url, s3_key) VALUES ($1, $2, $3)', 
-        //   [req.user.sub, result.url, result.key]);
+        // await query('INSERT INTO user_images (user_id, image_url, storage_path) VALUES ($1, $2, $3)', 
+        //   [req.user.uid, result.url, result.path]);
       }
 
       res.status(201).json({
@@ -109,11 +109,11 @@ router.get(
   authenticateToken,
   async (req: AuthRequest, res: Response) => {
     try {
-      if (!req.user?.sub) {
+      if (!req.user?.uid) {
         return res.status(401).json({ error: 'User ID not found' });
       }
 
-      const images = await listUserImages(req.user.sub);
+      const images = await listUserImages(req.user.uid);
 
       res.json({
         images,
@@ -127,35 +127,35 @@ router.get(
 );
 
 /**
- * DELETE /api/profile/images/:key
+ * DELETE /api/profile/images/:path(*)
  * Delete a specific profile image
  * Requires authentication
  */
 router.delete(
-  '/:key(*)',
+  '/:path(*)',
   authenticateToken,
   async (req: AuthRequest, res: Response) => {
     try {
-      const key = req.params.key;
+      const path = req.params.path;
 
-      if (!key) {
-        return res.status(400).json({ error: 'Image key is required' });
+      if (!path) {
+        return res.status(400).json({ error: 'Image path is required' });
       }
 
-      if (!req.user?.sub) {
+      if (!req.user?.uid) {
         return res.status(401).json({ error: 'User ID not found' });
       }
 
-      // Verify the key belongs to the user
-      if (!key.startsWith(`${req.user.sub}/`)) {
+      // Verify the path belongs to the user
+      if (!path.startsWith(`profile-images/${req.user.uid}/`)) {
         return res.status(403).json({ error: 'Unauthorized to delete this image' });
       }
 
-      await deleteProfileImage(key);
+      await deleteProfileImage(path);
 
       // TODO: Delete from database
-      // await query('DELETE FROM user_images WHERE user_id = $1 AND s3_key = $2', 
-      //   [req.user.sub, key]);
+      // await query('DELETE FROM user_images WHERE user_id = $1 AND storage_path = $2', 
+      //   [req.user.uid, path]);
 
       res.json({ message: 'Image deleted successfully' });
     } catch (error: any) {
@@ -175,14 +175,14 @@ router.delete(
   authenticateToken,
   async (req: AuthRequest, res: Response) => {
     try {
-      if (!req.user?.sub) {
+      if (!req.user?.uid) {
         return res.status(401).json({ error: 'User ID not found' });
       }
 
-      await deleteAllUserImages(req.user.sub);
+      await deleteUserImages(req.user.uid);
 
       // TODO: Delete from database
-      // await query('DELETE FROM user_images WHERE user_id = $1', [req.user.sub]);
+      // await query('DELETE FROM user_images WHERE user_id = $1', [req.user.uid]);
 
       res.json({ message: 'All profile images deleted successfully' });
     } catch (error: any) {

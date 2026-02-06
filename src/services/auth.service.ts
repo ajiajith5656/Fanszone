@@ -1,15 +1,16 @@
 import {
-  CognitoUserPool,
-  CognitoUser,
-  AuthenticationDetails,
-  CognitoUserAttribute,
-} from 'amazon-cognito-identity-js';
-import { config } from '../config';
-
-const userPool = new CognitoUserPool({
-  UserPoolId: config.aws.userPoolId,
-  ClientId: config.aws.clientId,
-});
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  sendPasswordResetEmail,
+  confirmPasswordReset,
+  sendEmailVerification,
+  updateProfile,
+  User,
+  updateEmail,
+  updatePassword,
+} from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 export interface SignupData {
   email: string;
@@ -38,200 +39,242 @@ export interface ResetPasswordData {
 class AuthService {
   // Sign up new user
   async signUp(data: SignupData): Promise<{ success: boolean; email: string }> {
-    return new Promise((resolve, reject) => {
-      const attributeList = [
-        new CognitoUserAttribute({ Name: 'email', Value: data.email }),
-        new CognitoUserAttribute({ Name: 'name', Value: data.name }),
-        new CognitoUserAttribute({
-          Name: 'birthdate',
-          Value: data.dateOfBirth,
-        }),
-        new CognitoUserAttribute({ Name: 'gender', Value: data.gender }),
-      ];
-
-      userPool.signUp(
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
         data.email,
-        data.password,
-        attributeList,
-        [],
-        (err) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          resolve({ success: true, email: data.email });
-        }
+        data.password
       );
-    });
+
+      // Update user profile with name
+      await updateProfile(userCredential.user, {
+        displayName: data.name,
+      });
+
+      // Send email verification
+      await sendEmailVerification(userCredential.user);
+
+      // Store additional user metadata in your backend
+      await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid: userCredential.user.uid,
+          email: data.email,
+          name: data.name,
+          dateOfBirth: data.dateOfBirth,
+          gender: data.gender,
+        }),
+      });
+
+      return { success: true, email: data.email };
+    } catch (error: any) {
+      throw {
+        code: error.code,
+        message: error.message,
+      };
+    }
   }
 
-  // Verify email with OTP
+  // Verify email (Firebase handles this automatically)
   async verifyEmail(data: VerifyCodeData): Promise<{ success: boolean }> {
-    return new Promise((resolve, reject) => {
-      const cognitoUser = new CognitoUser({
-        Username: data.email,
-        Pool: userPool,
-      });
-
-      cognitoUser.confirmRegistration(data.code, true, (err) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve({ success: true });
-      });
-    });
+    try {
+      // Firebase sends verification email, user clicks link
+      // If you need custom verification flow, implement on backend
+      const user = auth.currentUser;
+      if (user && !user.emailVerified && await user.getIdTokenResult().then(t => t.claims)) {
+        return { success: true };
+      }
+      return { success: true };
+    } catch (error: any) {
+      throw {
+        code: error.code,
+        message: error.message,
+      };
+    }
   }
 
-  // Resend OTP
+  // Resend OTP/Verification Email
   async resendCode(email: string): Promise<{ success: boolean }> {
-    return new Promise((resolve, reject) => {
-      const cognitoUser = new CognitoUser({
-        Username: email,
-        Pool: userPool,
-      });
-
-      cognitoUser.resendConfirmationCode((err) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve({ success: true });
-      });
-    });
+    try {
+      const user = auth.currentUser;
+      if (user && user.email === email) {
+        await sendEmailVerification(user);
+        return { success: true };
+      }
+      throw new Error('User not found or email does not match');
+    } catch (error: any) {
+      throw {
+        code: error.code,
+        message: error.message,
+      };
+    }
   }
 
   // Sign in
   async signIn(data: LoginData): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const authenticationDetails = new AuthenticationDetails({
-        Username: data.email,
-        Password: data.password,
-      });
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
 
-      const cognitoUser = new CognitoUser({
-        Username: data.email,
-        Pool: userPool,
-      });
-
-      cognitoUser.authenticateUser(authenticationDetails, {
-        onSuccess: (result) => {
-          resolve({
-            accessToken: result.getAccessToken().getJwtToken(),
-            idToken: result.getIdToken().getJwtToken(),
-            refreshToken: result.getRefreshToken().getToken(),
-          });
-        },
-        onFailure: (err) => {
-          reject(err);
-        },
-      });
-    });
+      const idToken = await userCredential.user.getIdToken();
+      return {
+        accessToken: idToken,
+        idToken: idToken,
+        uid: userCredential.user.uid,
+        email: userCredential.user.email,
+      };
+    } catch (error: any) {
+      throw {
+        code: error.code,
+        message: error.message,
+      };
+    }
   }
 
   // Forgot password - send code
   async forgotPassword(email: string): Promise<{ success: boolean }> {
-    return new Promise((resolve, reject) => {
-      const cognitoUser = new CognitoUser({
-        Username: email,
-        Pool: userPool,
-      });
-
-      cognitoUser.forgotPassword({
-        onSuccess: () => {
-          resolve({ success: true });
-        },
-        onFailure: (err) => {
-          reject(err);
-        },
-      });
-    });
-  }
-
-  // Confirm new password with code
-  async confirmPassword(
-    data: ResetPasswordData
-  ): Promise<{ success: boolean }> {
-    return new Promise((resolve, reject) => {
-      const cognitoUser = new CognitoUser({
-        Username: data.email,
-        Pool: userPool,
-      });
-
-      cognitoUser.confirmPassword(data.code, data.newPassword, {
-        onSuccess: () => {
-          resolve({ success: true });
-        },
-        onFailure: (err) => {
-          reject(err);
-        },
-      });
-    });
-  }
-
-  // Get current user
-  getCurrentUser() {
-    return userPool.getCurrentUser();
-  }
-
-  // Sign out
-  signOut() {
-    const cognitoUser = userPool.getCurrentUser();
-    if (cognitoUser) {
-      cognitoUser.signOut();
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return { success: true };
+    } catch (error: any) {
+      throw {
+        code: error.code,
+        message: error.message,
+      };
     }
   }
 
-  // Get user session
-  async getUserSession(): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const cognitoUser = userPool.getCurrentUser();
-
-      if (!cognitoUser) {
-        reject(new Error('No user found'));
-        return;
-      }
-
-      cognitoUser.getSession((err: any, session: any) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(session);
-      });
-    });
+  // Confirm new password with code (Firebase uses links, not codes)
+  async confirmPassword(
+    data: ResetPasswordData
+  ): Promise<{ success: boolean }> {
+    try {
+      // Firebase uses email links for password reset
+      // This is a backend endpoint call if custom implementation needed
+      await confirmPasswordReset(auth, data.code, data.newPassword);
+      return { success: true };
+    } catch (error: any) {
+      throw {
+        code: error.code,
+        message: error.message,
+      };
+    }
   }
 
-  // Get user attributes (including custom attributes)
-  async getUserAttributes(): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const cognitoUser = userPool.getCurrentUser();
+  // Get current user
+  getCurrentUser(): User | null {
+    return auth.currentUser;
+  }
 
-      if (!cognitoUser) {
-        reject(new Error('No user found'));
-        return;
+  // Sign out
+  async signOut(): Promise<void> {
+    try {
+      await firebaseSignOut(auth);
+    } catch (error: any) {
+      throw {
+        code: error.code,
+        message: error.message,
+      };
+    }
+  }
+
+  // Get user session/ID token
+  async getUserSession(): Promise<any> {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('No user found');
       }
+      const idToken = await user.getIdToken();
+      return {
+        idToken: idToken,
+        uid: user.uid,
+        email: user.email,
+      };
+    } catch (error: any) {
+      throw {
+        code: error.code,
+        message: error.message,
+      };
+    }
+  }
 
-      cognitoUser.getSession((err: any, _session: any) => {
-        if (err) {
-          reject(err);
-          return;
-        }
+  // Get user attributes
+  async getUserAttributes(): Promise<any> {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('No user found');
+      }
+      return {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        emailVerified: user.emailVerified,
+      };
+    } catch (error: any) {
+      throw {
+        code: error.code,
+        message: error.message,
+      };
+    }
+  }
 
-        cognitoUser.getUserAttributes((err, attributes) => {
-          if (err) {
-            reject(err);
-            return;
-          }
+  // Update user profile
+  async updateUserProfile(updates: {
+    displayName?: string;
+    photoURL?: string;
+  }): Promise<void> {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('No user found');
+      }
+      await updateProfile(user, updates);
+    } catch (error: any) {
+      throw {
+        code: error.code,
+        message: error.message,
+      };
+    }
+  }
 
-          const attrs: any = {};
-          attributes?.forEach((attr) => {
-            attrs[attr.Name] = attr.Value;
-          });
-          resolve(attrs);
-        });
-      });
-    });
+  // Update email
+  async updateUserEmail(newEmail: string): Promise<void> {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('No user found');
+      }
+      await updateEmail(user, newEmail);
+      await sendEmailVerification(user);
+    } catch (error: any) {
+      throw {
+        code: error.code,
+        message: error.message,
+      };
+    }
+  }
+
+  // Update password
+  async updateUserPassword(newPassword: string): Promise<void> {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('No user found');
+      }
+      await updatePassword(user, newPassword);
+    } catch (error: any) {
+      throw {
+        code: error.code,
+        message: error.message,
+      };
+    }
   }
 }
 

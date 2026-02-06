@@ -1,16 +1,14 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
+import * as admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 
-// Initialize S3 client
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION || 'us-east-1',
-});
+// Initialize Firebase Admin (assumes GOOGLE_APPLICATION_CREDENTIALS env var is set)
+const storage = admin.storage();
+const bucket = storage.bucket(process.env.FIREBASE_STORAGE_BUCKET || '');
 
-const PROFILE_BUCKET = 'mallucupiddp';
 const MAX_IMAGES_PER_USER = 10;
 
 /**
- * Upload a profile image to S3
+ * Upload a profile image to Firebase Storage
  * @param userId - User's unique ID (used as folder name)
  * @param file - File buffer and metadata
  * @returns URL of uploaded image
@@ -18,7 +16,7 @@ const MAX_IMAGES_PER_USER = 10;
 export async function uploadProfileImage(
   userId: string,
   file: { buffer: Buffer; mimetype: string; originalname: string }
-): Promise<{ url: string; key: string }> {
+): Promise<{ url: string; path: string }> {
   // Validate file type
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   if (!allowedTypes.includes(file.mimetype)) {
@@ -40,37 +38,43 @@ export async function uploadProfileImage(
   const timestamp = Date.now();
   const extension = file.mimetype.split('/')[1];
   const filename = `profile-${timestamp}.${extension}`;
-  const key = `${userId}/${filename}`;
+  const path = `profile-images/${userId}/${filename}`;
 
-  // Upload to S3
-  const command = new PutObjectCommand({
-    Bucket: PROFILE_BUCKET,
-    Key: key,
-    Body: file.buffer,
-    ContentType: file.mimetype,
-    CacheControl: 'max-age=31536000', // Cache for 1 year
+  // Create file reference
+  const fileRef = bucket.file(path);
+
+  // Upload to Firebase Storage
+  await fileRef.save(file.buffer, {
+    metadata: {
+      contentType: file.mimetype,
+      cacheControl: 'public, max-age=31536000', // Cache for 1 year
+      metadata: {
+        uploadedBy: userId,
+        uploadedAt: new Date().toISOString(),
+      },
+    },
   });
 
-  await s3Client.send(command);
+  // Generate signed URL (valid for 1 year)
+  const [signedUrl] = await fileRef.getSignedUrl({
+    version: 'v4',
+    action: 'read',
+    expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+  });
 
-  const url = `https://${PROFILE_BUCKET}.s3.amazonaws.com/${key}`;
-  console.log(`✅ Uploaded profile image for user ${userId}: ${url}`);
+  console.log(`✅ Uploaded profile image for user ${userId}: ${path}`);
 
-  return { url, key };
+  return { url: signedUrl, path };
 }
 
 /**
- * Delete a profile image from S3
- * @param key - S3 object key (e.g., "uid123/profile-123456789.jpg")
+ * Delete a profile image from Firebase Storage
+ * @param path - Firebase Storage file path (e.g., "profile-images/uid123/profile-123456789.jpg")
  */
-export async function deleteProfileImage(key: string): Promise<void> {
-  const command = new DeleteObjectCommand({
-    Bucket: PROFILE_BUCKET,
-    Key: key,
-  });
-
-  await s3Client.send(command);
-  console.log(`🗑️  Deleted profile image: ${key}`);
+export async function deleteProfileImage(path: string): Promise<void> {
+  const fileRef = bucket.file(path);
+  await fileRef.delete();
+  console.log(`🗑️  Deleted profile image: ${path}`);
 }
 
 /**
@@ -79,25 +83,59 @@ export async function deleteProfileImage(key: string): Promise<void> {
  * @returns Array of image URLs
  */
 export async function listUserImages(userId: string): Promise<string[]> {
-  const command = new ListObjectsV2Command({
-    Bucket: PROFILE_BUCKET,
-    Prefix: `${userId}/`,
-  });
+  const prefix = `profile-images/${userId}/`;
 
-  const response = await s3Client.send(command);
-  const images = response.Contents?.map(
-    (obj) => `https://${PROFILE_BUCKET}.s3.amazonaws.com/${obj.Key}`
-  ) || [];
+  try {
+    const [files] = await bucket.getFiles({ prefix });
 
-  return images;
+    const urls = await Promise.all(
+      files.map(async (file) => {
+        const [signedUrl] = await file.getSignedUrl({
+          version: 'v4',
+          action: 'read',
+          expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+        });
+        return signedUrl;
+      })
+    );
+
+    return urls;
+  } catch (error) {
+    console.error('Error listing user images:', error);
+    return [];
+  }
 }
 
 /**
- * Create user folder (automatically created on first upload, but this ensures it exists)
+ * Get a signed URL for an existing image
+ * @param path - Firebase Storage file path
+ * @returns Signed URL
+ */
+export async function getSignedUrl(path: string): Promise<string> {
+  const fileRef = bucket.file(path);
+  const [signedUrl] = await fileRef.getSignedUrl({
+    version: 'v4',
+    action: 'read',
+    expires: Date.now() + 365 * 24 * 60 * 60 * 1000, // 1 year
+  });
+  return signedUrl;
+}
+
+/**
+ * Delete all images for a user (when account is deleted)
  * @param userId - User's unique ID
  */
-export async function ensureUserFolder(userId: string): Promise<void> {
-  // S3 doesn't have "folders" - they're created implicitly when uploading files
+export async function deleteUserImages(userId: string): Promise<void> {
+  const prefix = `profile-images/${userId}/`;
+
+  try {
+    const [files] = await bucket.getFiles({ prefix });
+    await Promise.all(files.map((file) => file.delete()));
+    console.log(`🗑️  Deleted all images for user ${userId}`);
+  } catch (error) {
+    console.error('Error deleting user images:', error);
+  }
+}
   // This function is a placeholder for future folder-level operations
   console.log(`📁 User folder will be created on first upload: ${userId}/`);
 }

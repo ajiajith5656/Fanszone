@@ -1,33 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import jwksClient from 'jwks-rsa';
-
-const client = jwksClient({
-  jwksUri: `https://cognito-idp.${process.env.COGNITO_REGION}.amazonaws.com/${process.env.COGNITO_USER_POOL_ID}/.well-known/jwks.json`
-});
-
-function getKey(header: any, callback: any) {
-  client.getSigningKey(header.kid, (err, key) => {
-    if (err) {
-      callback(err);
-      return;
-    }
-    const signingKey = key?.getPublicKey();
-    callback(null, signingKey);
-  });
-}
+import * as admin from 'firebase-admin';
 
 export interface AuthRequest extends Request {
   user?: {
-    sub: string; // Cognito user ID
+    uid: string; // Firebase user ID
     email: string;
-    email_verified: boolean;
-    'cognito:username': string;
+    iat: number;
+    exp: number;
   };
 }
 
-// Middleware to verify AWS Cognito JWT tokens
-export const authenticateToken = (
+// Middleware to verify Firebase ID tokens
+export const authenticateToken = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
@@ -39,14 +23,19 @@ export const authenticateToken = (
     return res.status(401).json({ error: 'Access token required' });
   }
 
-  jwt.verify(token, getKey, { algorithms: ['RS256'] }, (err, decoded) => {
-    if (err) {
-      console.error('Token verification error:', err);
-      return res.status(403).json({ error: 'Invalid or expired token' });
-    }
-    req.user = decoded as any;
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    req.user = {
+      uid: decodedToken.uid,
+      email: decodedToken.email || '',
+      iat: decodedToken.iat,
+      exp: decodedToken.exp,
+    };
     next();
-  });
+  } catch (error: any) {
+    console.error('Token verification error:', error);
+    return res.status(403).json({ error: 'Invalid or expired token' });
+  }
 };
 
 // Middleware to check if user has admin role

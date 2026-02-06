@@ -3,9 +3,25 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import * as admin from 'firebase-admin';
 import profileImagesRouter from './routes/profile-images';
 
 dotenv.config();
+
+// Initialize Firebase Admin
+const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_KEY_PATH;
+if (serviceAccountPath) {
+  const serviceAccount = require(serviceAccountPath);
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  });
+} else {
+  // If running in environment with default credentials (e.g., Cloud Run, App Engine)
+  admin.initializeApp({
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  });
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,11 +36,11 @@ app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check endpoint (for AWS EB health checks)
+// Health check endpoint
 app.get('/', (req: Request, res: Response) => {
   res.json({
     status: 'ok',
-    message: 'Mallu Cupid Backend API',
+    message: 'Fanszone Backend API',
     version: '1.0.0',
     timestamp: new Date().toISOString()
   });
@@ -44,8 +60,8 @@ app.get('/api/test', (req: Request, res: Response) => {
     message: 'API is working!',
     environment: process.env.NODE_ENV,
     supabaseConfigured: !!process.env.SUPABASE_URL,
-    cognitoConfigured: !!process.env.COGNITO_USER_POOL_ID,
-    s3Configured: !!process.env.AWS_REGION
+    firebaseConfigured: !!process.env.FIREBASE_STORAGE_BUCKET,
+    databaseConfigured: !!process.env.DATABASE_URL
   });
 });
 
@@ -72,8 +88,9 @@ app.use((err: any, req: Request, res: Response, next: any) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV}`);
-  console.log(`🔗 Supabase: ${process.env.SUPABASE_URL ? '✅ Connected' : '❌ Not configured'}`);
-  console.log(`🔐 Cognito: ${process.env.COGNITO_USER_POOL_ID ? '✅ Configured' : '❌ Not configured'}`);
+  console.log(`🔥 Firebase: ${process.env.FIREBASE_STORAGE_BUCKET ? '✅ Configured' : '❌ Not configured'}`);
+  console.log(`🗄️  Supabase: ${process.env.SUPABASE_URL ? '✅ Connected' : '❌ Not configured'}`);
+  console.log(`🗃️  Database: ${process.env.DATABASE_URL ? '✅ Connected' : '❌ Not configured'}`);
 });
 
 export default app;
