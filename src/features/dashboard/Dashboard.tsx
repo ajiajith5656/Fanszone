@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { apiService } from "../../services/api.service";
-import { authService } from "../../services/auth.service";
 import "../../styles/dashboard.css";
 import "../../styles/feed.css";
 
@@ -11,7 +9,7 @@ type DashboardProps = {
   onTabChange?: (tab: NavTab) => void;
 };
 
-export type NavTab = "profile" | "connections" | "feed" | "room";
+export type NavTab = "feed" | "connections" | "search" | "profile";
 
 export default function Dashboard({ onSignOut, initialTab, onTabChange }: DashboardProps) {
   const { signupData } = useAuth();
@@ -30,7 +28,8 @@ export default function Dashboard({ onSignOut, initialTab, onTabChange }: Dashbo
 
   const loadProfile = async () => {
     try {
-      await apiService.getUserProfile();
+      // Mock load - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
     } catch (err) {
       console.error("Failed to load profile", err);
     } finally {
@@ -39,7 +38,7 @@ export default function Dashboard({ onSignOut, initialTab, onTabChange }: Dashbo
   };
 
   const handleSignOut = () => {
-    authService.signOut();
+    // Mock sign out - UI only
     onSignOut();
   };
 
@@ -76,8 +75,8 @@ export default function Dashboard({ onSignOut, initialTab, onTabChange }: Dashbo
       <main className="dashboard-content">
         {activeTab === "feed" && <FeedView signupData={signupData} />}
         {activeTab === "connections" && <ConnectionsView />}
+        {activeTab === "search" && <SearchView />}
         {activeTab === "profile" && <ProfileView signupData={signupData} />}
-        {activeTab === "room" && <RoomView />}
       </main>
 
       {/* Bottom Navigation */}
@@ -90,10 +89,9 @@ export default function Dashboard({ onSignOut, initialTab, onTabChange }: Dashbo
           }}
           aria-label="Feed"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <line x1="3" y1="9" x2="21" y2="9" />
-            <line x1="9" y1="21" x2="9" y2="9" />
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            <polyline points="9 22 9 12 15 12 15 22"/>
           </svg>
           <span>Feed</span>
         </button>
@@ -106,27 +104,43 @@ export default function Dashboard({ onSignOut, initialTab, onTabChange }: Dashbo
           }}
           aria-label="Connections"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-            <circle cx="9" cy="7" r="4" />
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
           <span>Connections</span>
         </button>
 
-        {/* Center Add Post Button */}
         <button
           className="nav-item-center"
           onClick={() => window.location.href = '/post/create'}
           aria-label="Create Post"
         >
           <div className="add-post-btn">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
               <line x1="12" y1="5" x2="12" y2="19"/>
               <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
           </div>
+        </button>
+
+        <button
+          className={`nav-item ${activeTab === "search" ? "active" : ""}`}
+          onClick={() => {
+            setActiveTab("search");
+            onTabChange?.("search");
+          }}
+          aria-label="Search"
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="7" height="7"/>
+            <rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/>
+            <rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          <span>Search</span>
         </button>
 
         <button
@@ -137,26 +151,11 @@ export default function Dashboard({ onSignOut, initialTab, onTabChange }: Dashbo
           }}
           aria-label="Profile"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
           </svg>
           <span>Profile</span>
-        </button>
-
-        <button
-          className={`nav-item ${activeTab === "room" ? "active" : ""}`}
-          onClick={() => {
-            setActiveTab("room");
-            onTabChange?.("room");
-          }}
-          aria-label="Room"
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-          </svg>
-          <span>Room</span>
         </button>
       </nav>
     </div>
@@ -178,9 +177,24 @@ function FeedView({ signupData: _signupData }: { signupData: any }) {
 
   const loadPosts = async () => {
     try {
-      const response = await apiService.getPosts(page, 10);
-      setPosts(prev => page === 1 ? response.data.posts : [...prev, ...response.data.posts]);
-      setHasMore(response.data.hasMore || false);
+      // Mock posts - UI only
+      const mockPosts = [
+        {
+          postId: "1",
+          authorName: "Sample Author",
+          title: "Sample Post",
+          description: "This is a sample post for UI testing",
+          isPremium: false,
+          price: 0,
+          likeCount: 0,
+          commentCount: 0,
+          isLiked: false,
+          hasAccess: true,
+          createdAt: new Date().toISOString()
+        }
+      ];
+      setPosts(prev => page === 1 ? mockPosts : [...prev, ...mockPosts]);
+      setHasMore(false);
     } catch (err) {
       console.error("Failed to load posts", err);
     } finally {
@@ -197,8 +211,9 @@ function FeedView({ signupData: _signupData }: { signupData: any }) {
     
     setIsSearching(true);
     try {
-      const response = await apiService.searchPosts(searchQuery);
-      setPosts(response.data.posts || []);
+      // Mock search - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setPosts([]);
       setHasMore(false);
     } catch (err) {
       console.error("Search failed", err);
@@ -209,11 +224,8 @@ function FeedView({ signupData: _signupData }: { signupData: any }) {
 
   const handleLike = async (postId: string, isLiked: boolean) => {
     try {
-      if (isLiked) {
-        await apiService.unlikePost(postId);
-      } else {
-        await apiService.likePost(postId);
-      }
+      // Mock like - UI only
+      await new Promise(resolve => setTimeout(resolve, 200));
       setPosts(prev => prev.map(post => 
         post.postId === postId 
           ? { ...post, isLiked: !isLiked, likeCount: post.likeCount + (isLiked ? -1 : 1) }
@@ -226,7 +238,8 @@ function FeedView({ signupData: _signupData }: { signupData: any }) {
 
   const handlePurchase = async (postId: string) => {
     try {
-      await apiService.purchasePost(postId);
+      // Mock purchase - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
       setPosts(prev => prev.map(post => 
         post.postId === postId ? { ...post, hasAccess: true } : post
       ));
@@ -408,266 +421,167 @@ function formatTimestamp(timestamp: string): string {
 }
 
 // Connections View Component
-function ConnectionsView() {
-  const [activeTab, setActiveTab] = useState<'connections' | 'requests'>('connections');
-  const [connections, setConnections] = useState<any[]>([]);
-  const [requests, setRequests] = useState<any[]>([]);
-  const [connectionCount, setConnectionCount] = useState(0);
-  const [requestCount, setRequestCount] = useState(0);
+function SearchView() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searchType, setSearchType] = useState<'people' | 'posts'>('people');
 
-  useEffect(() => {
-    loadData();
-  }, [activeTab]);
-
-  const loadData = async () => {
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
     setLoading(true);
     try {
-      if (activeTab === 'connections') {
-        const response = await apiService.getConnections(1, 5);
-        setConnections(response.data.connections || []);
-        setConnectionCount(response.data.totalCount || 0);
-      } else {
-        const response = await apiService.getConnectionRequests(1, 5);
-        setRequests(response.data.requests || []);
-        setRequestCount(response.data.totalCount || 0);
-      }
+      // Mock search - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setResults([]);
     } catch (err) {
-      console.error("Failed to load data", err);
+      console.error("Search failed", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-    
-    setIsSearching(true);
+  return (
+    <div className="search-view">
+      <div className="section-header">
+        <h2>Search</h2>
+        <p className="section-subtitle">Find people and content</p>
+      </div>
+
+      {/* Search Type Toggle */}
+      <div className="search-type-toggle\">
+        <button
+          className={searchType === 'people' ? 'active' : ''}
+          onClick={() => setSearchType('people')}
+        >
+          People
+        </button>
+        <button
+          className={searchType === 'posts' ? 'active' : ''}
+          onClick={() => setSearchType('posts')}
+        >
+          Posts
+        </button>
+      </div>
+
+      {/* Search Input */}
+      <div className="feed-search">
+        <input 
+          type="text"
+          placeholder={`Search ${searchType}...`}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+          className="search-input"
+        />
+        <button 
+          className="search-btn" 
+          onClick={handleSearch}
+          disabled={loading}
+        >
+          {loading ? (
+            <div className="spinner-small"></div>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {/* Results */}
+      {loading ? (
+        <div className="feed-loading">
+          <p>Searching...</p>
+        </div>
+      ) : results.length > 0 ? (
+        <div className="search-results">
+          {results.map((result: any) => (
+            <div key={result.id} className="result-item">
+              <p>{result.name}</p>
+            </div>
+          ))}
+        </div>
+      ) : searchQuery ? (
+        <div className="empty-state">
+          <p>No results found</p>
+          <p style={{ fontSize: '14px', opacity: 0.6 }}>Try a different search term</p>
+        </div>
+      ) : (
+        <div className="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.3">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          <p style={{ marginTop: '16px' }}>Start searching</p>
+          <p style={{ fontSize: '14px', opacity: 0.6 }}>Find people and posts you're interested in</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Connections View Component
+function ConnectionsView() {
+  const [connections, setConnections] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadConnections();
+  }, []);
+
+  const loadConnections = async () => {
     try {
-      const response = await apiService.searchConnections(searchQuery);
-      setConnections(response.data.connections || []);
+      // Mock connections - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setConnections([]);
     } catch (err) {
-      console.error("Search failed", err);
+      console.error("Failed to load connections", err);
     } finally {
-      setIsSearching(false);
+      setLoading(false);
     }
-  };
-
-  const handleAcceptRequest = async (userId: string) => {
-    try {
-      await apiService.acceptConnectionRequest(userId);
-      loadData(); // Reload to update counts
-    } catch (err) {
-      console.error("Failed to accept request", err);
-    }
-  };
-
-  const handleRejectRequest = async (userId: string) => {
-    try {
-      await apiService.rejectConnectionRequest(userId);
-      setRequests(requests.filter(r => r.userId !== userId));
-      setRequestCount(prev => Math.max(0, prev - 1));
-    } catch (err) {
-      console.error("Failed to reject request", err);
-    }
-  };
-
-  const handleReport = (userId: string) => {
-    // Open report modal
-    console.log("Report user:", userId);
   };
 
   return (
     <div className="connections-view">
-      {/* Tab Selection */}
-      <div className="connections-tabs">
-        <button 
-          className={`tab-btn ${activeTab === 'connections' ? 'active' : ''}`}
-          onClick={() => setActiveTab('connections')}
-        >
-          Connections
-        </button>
-        <button 
-          className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`}
-          onClick={() => setActiveTab('requests')}
-        >
-          Requests
-          {requestCount > 0 && <span className="badge">{requestCount}</span>}
-        </button>
+      <div className="section-header">
+        <h2>Connections</h2>
+        <p className="section-subtitle">People you've connected with</p>
       </div>
-
-      {/* Connections Tab */}
-      {activeTab === 'connections' && (
-        <div className="tab-content">
-          {/* Search Box */}
-          <div className="search-box">
-            <input 
-              type="text"
-              placeholder="Search by name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="search-input"
-            />
-            <button 
-              className="search-btn" 
-              onClick={handleSearch}
-              disabled={isSearching}
-            >
-              {isSearching ? (
-                <div className="spinner-small"></div>
-              ) : (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="m21 21-4.35-4.35"/>
-                </svg>
-              )}
-            </button>
-          </div>
-
-          {/* Total Count */}
-          <div className="count-label">
-            Total Connections: <strong>{connectionCount}</strong>
-          </div>
-
-          {/* Connection Cards */}
-          {loading ? (
-            <div className="loading-spinner">
-              <div className="spinner"></div>
-              <p>Loading connections...</p>
-            </div>
-          ) : connections.length > 0 ? (
-            <>
-              <div className="connection-cards">
-                {connections.map((connection: any) => (
-                  <div key={connection.userId} className="connection-card">
-                    <div className="card-image">
-                      <img src={connection.profileImage} alt={connection.name} />
-                    </div>
-                    <div className="card-content">
-                      <div className="card-header">
-                        <h4 className="card-name">{connection.name}</h4>
-                        {connection.isVerified && (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="#4CAF50" className="verified-icon">
-                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-                          </svg>
-                        )}
-                      </div>
-                      <div className="card-actions">
-                        <button className="action-btn-small view">View</button>
-                        <button className="action-btn-small message">Message</button>
-                        <button className="action-btn-small report" onClick={() => handleReport(connection.userId)}>Report</button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {connections.length >= 5 && (
-                <button className="see-more-btn" onClick={() => window.location.href = '/connections/all'}>
-                  See More
-                </button>
-              )}
-            </>
-          ) : (
-            <div className="empty-state">
-              <p>No connections yet</p>
-              <p style={{ fontSize: '14px', opacity: 0.6 }}>Start swiping to make connections!</p>
-            </div>
-          )}
-
-          {/* Footer Buttons */}
-          <div className="footer-actions">
-            <button className="footer-btn" onClick={() => window.location.href = '/blocked-accounts'}>
-              Blocked Accounts
-            </button>
-            <button className="footer-btn" onClick={() => window.location.href = '/report-abuse'}>
-              Report Abuse
-            </button>
-          </div>
+      
+      {loading ? (
+        <div className="feed-loading">
+          <div className="spinner"></div>
+          <p>Loading connections...</p>
         </div>
-      )}
-
-      {/* Requests Tab */}
-      {activeTab === 'requests' && (
-        <div className="tab-content">
-          {/* Total Count */}
-          <div className="count-label">
-            Total Requests: <strong>{requestCount}</strong>
-          </div>
-
-          {/* Request Cards */}
-          {loading ? (
-            <div className="loading-spinner">
-              <div className="spinner"></div>
-              <p>Loading requests...</p>
-            </div>
-          ) : requests.length > 0 ? (
-            <>
-              <div className="connection-cards">
-                {requests.map((request: any) => (
-                  <div key={request.userId} className="connection-card">
-                    <div className="card-image">
-                      <img src={request.profileImage} alt={request.name} />
-                    </div>
-                    <div className="card-content">
-                      <div className="card-header">
-                        <h4 className="card-name">{request.name}</h4>
-                        {request.isVerified && (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="#4CAF50" className="verified-icon">
-                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-                          </svg>
-                        )}
-                      </div>
-                      <div className="card-actions">
-                        <button 
-                          className="action-btn-small accept" 
-                          onClick={() => handleAcceptRequest(request.userId)}
-                        >
-                          Accept
-                        </button>
-                        <button 
-                          className="action-btn-small reject" 
-                          onClick={() => handleRejectRequest(request.userId)}
-                        >
-                          Reject
-                        </button>
-                        <button 
-                          className="action-btn-small report" 
-                          onClick={() => handleReport(request.userId)}
-                        >
-                          Report
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+      ) : connections.length > 0 ? (
+        <div className="connections-list">
+          {connections.map((connection: any) => (
+            <div key={connection.id} className="connection-item">
+              <div className="connection-avatar">
+                <div className="avatar-placeholder">
+                  {connection.name?.[0]?.toUpperCase() || 'U'}
+                </div>
               </div>
-              
-              {requests.length >= 5 && (
-                <button className="see-more-btn" onClick={() => window.location.href = '/connections/requests'}>
-                  See More
-                </button>
-              )}
-            </>
-          ) : (
-            <div className="empty-state">
-              <p>No connection requests</p>
-              <p style={{ fontSize: '14px', opacity: 0.6 }}>You'll see requests here when someone wants to connect!</p>
+              <div className="connection-info">
+                <h4>{connection.name}</h4>
+                <p>{connection.status}</p>
+              </div>
             </div>
-          )}
-
-          {/* Footer Buttons */}
-          <div className="footer-actions">
-            <button className="footer-btn" onClick={() => window.location.href = '/blocked-accounts'}>
-              Blocked Accounts
-            </button>
-            <button className="footer-btn" onClick={() => window.location.href = '/report-abuse'}>
-              Report Abuse
-            </button>
-          </div>
+          ))}
+        </div>
+      ) : (
+        <div className="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.3">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <p style={{ marginTop: '16px' }}>No connections yet</p>
+          <p style={{ fontSize: '14px', opacity: 0.6 }}>Start connecting with people!</p>
         </div>
       )}
     </div>
@@ -780,7 +694,7 @@ function ProfileView({ signupData }: { signupData: any }) {
 
   const confirmSignOut = async () => {
     try {
-      await authService.signOut();
+      // Mock sign out - UI only
       window.location.reload();
     } catch (err) {
       console.error("Failed to sign out", err);
@@ -1096,52 +1010,66 @@ function ProfileView({ signupData }: { signupData: any }) {
 }
 
 // Room View Component
-function RoomView() {
-  const [rooms, setRooms] = useState<any[]>([]);
+function ReelsView() {
+  const [reels, setReels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadRooms();
+    loadReels();
   }, []);
 
-  const loadRooms = async () => {
+  const loadReels = async () => {
     try {
-      // API endpoint to be implemented
-      // const response = await apiService.getRooms();
-      // setRooms(response.data || []);
-      setRooms([]);
+      // Mock reels - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setReels([]);
     } catch (err) {
-      console.error("Failed to load rooms", err);
+      console.error("Failed to load reels", err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="room-view">
+    <div className="reels-view">
       <div className="section-header">
-        <h2>Chat Rooms</h2>
-        <p className="section-subtitle">Join conversations and meet new people</p>
+        <h2>Reels</h2>
+        <p className="section-subtitle">Short video content from the community</p>
       </div>
       
       {loading ? (
         <div className="feed-loading">
-          <p>Loading rooms...</p>
+          <div className="spinner"></div>
+          <p>Loading reels...</p>
         </div>
-      ) : rooms.length > 0 ? (
-        <div className="rooms-list">
-          {rooms.map((room: any) => (
-            <div key={room.id} className="room-card">
-              <div className="room-icon">{room.icon || '💬'}</div>
-              <h4>{room.name}</h4>
-              <p>{room.membersOnline || 0} members online</p>
+      ) : reels.length > 0 ? (
+        <div className="reels-grid">
+          {reels.map((reel: any) => (
+            <div key={reel.id} className="reel-card">
+              <div className="reel-thumbnail">
+                <img src={reel.thumbnail} alt={reel.title} />
+                <div className="reel-play-icon">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                </div>
+              </div>
+              <div className="reel-info">
+                <p className="reel-author">{reel.author}</p>
+                <p className="reel-views">{reel.views} views</p>
+              </div>
             </div>
           ))}
         </div>
       ) : (
         <div className="empty-state">
-          <p>No chat rooms available</p>
-          <p style={{ fontSize: '14px', opacity: 0.6 }}>Check back soon for group conversations!</p>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.3">
+            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+            <line x1="7" y1="2" x2="7" y2="22"/>
+            <line x1="17" y1="2" x2="17" y2="22"/>
+          </svg>
+          <p style={{ marginTop: '16px' }}>No reels yet</p>
+          <p style={{ fontSize: '14px', opacity: 0.6 }}>Check back later for video content!</p>
         </div>
       )}
     </div>

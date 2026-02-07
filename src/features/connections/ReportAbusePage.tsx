@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../../services/api.service';
 import '../../styles/connections-pages.css';
 
 export function ReportAbusePage() {
@@ -33,7 +32,8 @@ export function ReportAbusePage() {
 
     setSubmitting(true);
     try {
-      await apiService.reportUser(formData.userId, formData.reason, formData.description);
+      // Mock report - UI only
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setSubmitted(true);
       setTimeout(() => {
         navigate(-1);

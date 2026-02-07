@@ -2,44 +2,10 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   padding: 24px 20px 28px;
   background: radial-gradient(circle at top, #1d0b2c 0%, #0b0d14 45%, #050508 100%);
   color: #f6f2ff;
-}
-
-.login-header {
-  display: flex;
-  justify-content: center;
-}
-
-.logo-area {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
-
-.logo-mark {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-  background: linear-gradient(135deg, #ff2d55, #7b5dff);
-  box-shadow: 0 10px 24px rgba(255, 45, 85, 0.35);
-}
-
-.app-name {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.app-tagline {
-  margin: 4px 0 0;
-  font-size: 12px;
-  opacity: 0.75;
 }
 
 .login-card {
@@ -116,6 +82,9 @@
   font-weight: 600;
   font-size: 14px;
   box-shadow: 0 12px 30px rgba(255, 45, 85, 0.35);
+  max-width: 200px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .divider {
@@ -153,8 +122,10 @@
   color: #f6f2ff;
   padding: 12px 16px;
   border-radius: 14px;
+  max-width: 200px;
   width: 100%;
   font-weight: 600;
+  margin: 0 auto;
 }
 
 .login-footer {

@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { authService } from "../../services/auth.service";
-import { apiService } from "../../services/api.service";
 import { useAuth } from "../../context/AuthContext";
 import "../../styles/login.css";
 
@@ -32,30 +30,16 @@ export default function LoginPage({
     setLoading(true);
 
     try {
-      // Sign in with Cognito
-      await authService.signIn({ email, password });
+      // Mock authentication - UI only
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Fetch user role from backend
-      try {
-        const roleResponse = await apiService.getUserRole();
-        const userRole = roleResponse.data.role || 'user';
-        setUserRole(userRole);
-      } catch (roleErr) {
-        console.error('Failed to fetch user role:', roleErr);
-        setUserRole('user'); // Default to user role if fetch fails
-      }
-      
+      // Set default user role
+      setUserRole('user');
       setIsAuthenticated(true);
       setUserEmail(email);
       onSuccess();
     } catch (err: any) {
-      if (err.code === "NotAuthorizedException") {
-        setError("Invalid email or password");
-      } else if (err.code === "UserNotConfirmedException") {
-        setError("Please verify your email first");
-      } else {
-        setError(err.message || "Login failed");
-      }
+      setError("Login failed");
     } finally {
       setLoading(false);
     }
@@ -63,16 +47,6 @@ export default function LoginPage({
 
   return (
     <div className="login">
-      <header className="login-header">
-        <div className="logo-area">
-          <span className="logo-mark">MC</span>
-          <div>
-            <p className="app-name">Mallu Cupid</p>
-            <p className="app-tagline">Connect with your perfect Match</p>
-          </div>
-        </div>
-      </header>
-
       <main className="login-card">
         <div className="login-title">
           <h1>Welcome back</h1>

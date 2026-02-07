@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { apiService } from "../../services/api.service";
 import "../../styles/profile-view.css";
 
 interface UserProfile {
@@ -34,8 +33,21 @@ export const ProfileViewPage: React.FC = () => {
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
-      const { data } = await apiService.viewUserProfile(userId!);
-      setProfile(data);
+      // Mock profile data - UI only
+      const mockProfile: UserProfile = {
+        userId: userId || "1",
+        name: "Sample User",
+        age: 25,
+        gender: "Other",
+        bio: "This is a sample profile for UI testing",
+        profession: "Software Developer",
+        location: "Sample City",
+        isVerified: true,
+        images: [],
+        hasExclusiveRoom: false,
+        isConnected: false
+      };
+      setProfile(mockProfile);
     } catch (error) {
       console.error("Error fetching profile:", error);
     } finally {
@@ -45,7 +57,8 @@ export const ProfileViewPage: React.FC = () => {
 
   const handleConnect = async () => {
     try {
-      await apiService.sendConnectionRequest(userId!);
+      // Mock connect - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
       alert("Connection request sent!");
     } catch (error) {
       console.error("Error sending connection request:", error);
@@ -63,7 +76,8 @@ export const ProfileViewPage: React.FC = () => {
       return;
     }
     try {
-      await apiService.reportUser(userId!, reportReason, reportDescription);
+      // Mock report - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
       alert("Report submitted successfully");
       setShowReportDialog(false);
       setReportReason("");

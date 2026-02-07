@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { authService } from "../../services/auth.service";
 import "../../styles/auth-flow.css";
 
 type SignupEmailStepProps = {
@@ -50,23 +49,14 @@ export default function SignupEmailStep({
     setLoading(true);
 
     try {
-      await authService.signUp({
-        email,
-        password,
-        name: signupData.name!,
-        dateOfBirth: signupData.dateOfBirth!,
-        gender: signupData.gender!,
-      });
+      // Mock signup - UI only
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       updateSignupData({ email, password });
       setUserEmail(email);
       onSendCode();
     } catch (err: any) {
-      if (err.code === "UsernameExistsException") {
-        setError("This email is already registered");
-      } else {
-        setError(err.message || "Something went wrong. Please try again");
-      }
+      setError("Something went wrong. Please try again");
     } finally {
       setLoading(false);
     }

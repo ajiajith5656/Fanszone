@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../../services/api.service';
 import '../../styles/connections-pages.css';
 
 export function ConnectionRequestsPage() {
@@ -16,9 +15,10 @@ export function ConnectionRequestsPage() {
 
   const loadRequests = async () => {
     try {
-      const response = await apiService.getConnectionRequests(page, 20);
-      setRequests(prev => [...prev, ...(response.data.requests || [])]);
-      setHasMore(response.data.hasMore || false);
+      // Mock requests - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setRequests([]);
+      setHasMore(false);
     } catch (err) {
       console.error("Failed to load requests", err);
     } finally {
@@ -28,7 +28,8 @@ export function ConnectionRequestsPage() {
 
   const handleAcceptRequest = async (userId: string) => {
     try {
-      await apiService.acceptConnectionRequest(userId);
+      // Mock accept - UI only
+      await new Promise(resolve => setTimeout(resolve, 300));
       setRequests(requests.filter(r => r.userId !== userId));
     } catch (err) {
       console.error("Failed to accept request", err);
@@ -37,7 +38,8 @@ export function ConnectionRequestsPage() {
 
   const handleRejectRequest = async (userId: string) => {
     try {
-      await apiService.rejectConnectionRequest(userId);
+      // Mock reject - UI only
+      await new Promise(resolve => setTimeout(resolve, 300));
       setRequests(requests.filter(r => r.userId !== userId));
     } catch (err) {
       console.error("Failed to reject request", err);

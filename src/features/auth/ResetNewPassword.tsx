@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { authService } from "../../services/auth.service";
 import "../../styles/auth-flow.css";
 
 type ResetNewPasswordProps = {
@@ -36,10 +35,11 @@ export default function ResetNewPassword({
     setLoading(true);
 
     try {
-      await authService.confirmPassword({ email, code, newPassword });
+      // Mock password reset - UI only
+      await new Promise(resolve => setTimeout(resolve, 1000));
       onComplete();
     } catch (err: any) {
-      setError(err.message || "Failed to reset password");
+      setError("Failed to reset password");
     } finally {
       setLoading(false);
     }

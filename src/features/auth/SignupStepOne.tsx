@@ -8,13 +8,31 @@ type SignupStepOneProps = {
 };
 
 export default function SignupStepOne({ onNext, onBack }: SignupStepOneProps) {
-  const { signupData, updateSignupData } = useAuth();
-  const [name, setName] = useState(signupData.name || "");
-  const [dateOfBirth, setDateOfBirth] = useState(signupData.dateOfBirth || "");
-  const [gender, setGender] = useState(signupData.gender || "");
+  const { updateSignupData, setUserEmail } = useAuth();
+  const [name, setName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [gender, setGender] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleNext = () => {
+  const validateEmail = (email: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
+  const validatePassword = (password: string) => {
+    if (password.length < 8) return "Password must be at least 8 characters";
+    if (password.length > 30) return "Password must not exceed 30 characters";
+    if (!/[a-z]/.test(password)) return "Password must contain at least one lowercase letter";
+    if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter";
+    return null;
+  };
+
+  const handleSignup = async () => {
     setError("");
 
     if (!name.trim()) {
@@ -38,7 +56,7 @@ export default function SignupStepOne({ onNext, onBack }: SignupStepOneProps) {
       monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
 
     if (actualAge < 18) {
-      setError("You must be at least 18 years old to continue");
+      setError("Under 18 not permitted");
       return;
     }
 
@@ -47,8 +65,46 @@ export default function SignupStepOne({ onNext, onBack }: SignupStepOneProps) {
       return;
     }
 
-    updateSignupData({ name, dateOfBirth, gender });
-    onNext();
+    if (!email.trim()) {
+      setError("Please enter your email address");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (!acceptedTerms) {
+      setError("Accept our terms & policies");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Mock signup - UI only
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      updateSignupData({ name, dateOfBirth, gender, email, password });
+      setUserEmail(email);
+      onNext();
+    } catch (err: any) {
+      setError("Something went wrong. Please try again");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -88,12 +144,57 @@ export default function SignupStepOne({ onNext, onBack }: SignupStepOneProps) {
           </select>
         </div>
 
-        <p className="helper-text">You must be 18 or older to use MalluCupid</p>
+        <div className="field-group">
+          <label>EMAIL ADDRESS</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@email.com"
+          />
+        </div>
+
+        <div className="field-group">
+          <label>PASSWORD</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="8-30 characters, A-z"
+          />
+        </div>
+
+        <div className="field-group">
+          <label>CONFIRM PASSWORD</label>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Re-enter password"
+          />
+        </div>
+
+        <div className="checkbox-group">
+          <input
+            type="checkbox"
+            id="terms"
+            checked={acceptedTerms}
+            onChange={(e) => setAcceptedTerms(e.target.checked)}
+          />
+          <label htmlFor="terms">
+            I accept the <a href="#">Terms & Policies</a>
+          </label>
+        </div>
 
         {error && <p className="error-text">{error}</p>}
 
-        <button className="primary-button" type="button" onClick={handleNext}>
-          Next
+        <button 
+          className="primary-button" 
+          type="button" 
+          onClick={handleSignup}
+          disabled={loading}
+        >
+          {loading ? "Signing up..." : "Signup"}
         </button>
         <button className="secondary-button" type="button" onClick={onBack}>
           Back

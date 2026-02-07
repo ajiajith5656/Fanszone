@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import { apiService } from "../../services/api.service";
 import "../../styles/auth-flow.css";
 import "../../styles/verification.css";
 
@@ -104,11 +103,11 @@ export default function VerificationStep({
     setUploading(true);
 
     try {
-      await apiService.uploadVerificationDocument(ageProof, "age_proof");
-      await apiService.uploadVerificationDocument(selfie, "selfie");
+      // Mock upload - UI only
+      await new Promise(resolve => setTimeout(resolve, 1000));
       onNext();
     } catch (err: any) {
-      setError(err.message || "Verification upload failed");
+      setError("Verification upload failed");
     } finally {
       setUploading(false);
     }

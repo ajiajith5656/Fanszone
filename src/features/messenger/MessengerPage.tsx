@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { apiService } from "../../services/api.service";
 import "../../styles/messenger.css";
 
 interface Connection {
@@ -66,8 +65,9 @@ export const MessengerPage: React.FC = () => {
   const fetchConnections = async () => {
     try {
       setLoading(true);
-      const { data } = await apiService.getConnections();
-      setConnections(data?.connections || []);
+      // Mock connections - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setConnections([]);
     } catch (error) {
       console.error("Error fetching connections:", error);
     } finally {
@@ -77,10 +77,9 @@ export const MessengerPage: React.FC = () => {
 
   const fetchMessages = async (userId: string) => {
     try {
-      const { data } = await apiService.getMessages(userId);
-      setMessages(data?.messages || []);
-      // Mark messages as read
-      await apiService.markMessagesAsRead(userId);
+      // Mock messages - UI only
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setMessages([]);
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
@@ -97,7 +96,8 @@ export const MessengerPage: React.FC = () => {
 
     try {
       setSendingMessage(true);
-      await apiService.sendMessage(selectedChat.userId, newMessage);
+      // Mock send message - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
       setNewMessage("");
       // Refresh messages
       fetchMessages(selectedChat.userId);

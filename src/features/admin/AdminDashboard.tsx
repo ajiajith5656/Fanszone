@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { apiService } from "../../services/api.service";
 import "../../styles/admin-dashboard.css";
 
 type AdminView =
@@ -66,18 +65,17 @@ export const AdminDashboard: React.FC = () => {
   const loadViewData = async (view: AdminView) => {
     setLoading(true);
     try {
+      // Mock data - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
       switch (view) {
         case "users":
-          const usersData = await apiService.adminGetUsers();
-          setUsers(usersData.data?.users || []);
+          setUsers([]);
           break;
         case "posts":
-          const postsData = await apiService.adminGetPosts();
-          setPosts(postsData.data?.posts || []);
+          setPosts([]);
           break;
         case "verification":
-          const verificationsData = await apiService.adminGetVerificationRequests();
-          setVerificationRequests(verificationsData.data?.requests || []);
+          setVerificationRequests([]);
           break;
       }
     } catch (error) {
@@ -89,9 +87,7 @@ export const AdminDashboard: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
-      // Import authService for signout
-      const { authService } = await import("../../services/auth.service");
-      await authService.signOut();
+      // Mock sign out - UI only
       navigate("/login");
     } catch (error) {
       console.error("Sign out error:", error);
@@ -100,7 +96,8 @@ export const AdminDashboard: React.FC = () => {
 
   const handleApproveVerification = async (requestId: string) => {
     try {
-      await apiService.adminApproveVerification(requestId);
+      // Mock approve - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
       alert("Verification approved!");
       loadViewData("verification");
     } catch (error) {
@@ -111,7 +108,8 @@ export const AdminDashboard: React.FC = () => {
 
   const handleRejectVerification = async (requestId: string, reason: string) => {
     try {
-      await apiService.adminRejectVerification(requestId, reason);
+      // Mock reject - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
       alert("Verification rejected");
       loadViewData("verification");
     } catch (error) {
@@ -123,7 +121,8 @@ export const AdminDashboard: React.FC = () => {
   const handleDeletePost = async (postId: string) => {
     if (confirm("Are you sure you want to delete this post?")) {
       try {
-        await apiService.adminDeletePost(postId);
+        // Mock delete - UI only
+        await new Promise(resolve => setTimeout(resolve, 500));
         alert("Post deleted");
         loadViewData("posts");
       } catch (error) {
@@ -136,7 +135,8 @@ export const AdminDashboard: React.FC = () => {
   const handleBanUser = async (userId: string) => {
     if (confirm("Are you sure you want to ban this user?")) {
       try {
-        await apiService.adminBanUser(userId);
+        // Mock ban - UI only
+        await new Promise(resolve => setTimeout(resolve, 500));
         alert("User banned");
         loadViewData("users");
       } catch (error) {

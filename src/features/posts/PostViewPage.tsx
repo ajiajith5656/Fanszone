@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { apiService } from '../../services/api.service';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/post-view.css';
 
@@ -21,8 +20,21 @@ export function PostViewPage() {
 
   const loadPost = async () => {
     try {
-      const response = await apiService.getPostById(postId!);
-      setPost(response.data);
+      // Mock post - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const mockPost = {
+        postId: postId,
+        authorName: 'Sample Author',
+        authorAvatar: '',
+        description: 'Sample post description',
+        isVerified: true,
+        likeCount: 0,
+        commentCount: 0,
+        isLiked: false,
+        hasAccess: true,
+        accessType: 'free'
+      };
+      setPost(mockPost);
     } catch (err) {
       console.error("Failed to load post", err);
     } finally {
@@ -32,8 +44,9 @@ export function PostViewPage() {
 
   const loadComments = async () => {
     try {
-      const response = await apiService.getComments(postId!);
-      setComments(response.data.comments || []);
+      // Mock comments - UI only
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setComments([]);
     } catch (err) {
       console.error("Failed to load comments", err);
     }
@@ -42,11 +55,8 @@ export function PostViewPage() {
   const handleLike = async () => {
     if (!post) return;
     try {
-      if (post.isLiked) {
-        await apiService.unlikePost(postId!);
-      } else {
-        await apiService.likePost(postId!);
-      }
+      // Mock like - UI only
+      await new Promise(resolve => setTimeout(resolve, 200));
       setPost({
         ...post,
         isLiked: !post.isLiked,
@@ -62,7 +72,8 @@ export function PostViewPage() {
     
     setSubmitting(true);
     try {
-      await apiService.addComment(postId!, newComment);
+      // Mock add comment - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
       setNewComment('');
       loadComments();
       setPost({ ...post, commentCount: (post.commentCount || 0) + 1 });
@@ -77,7 +88,8 @@ export function PostViewPage() {
     if (!window.confirm('Delete this comment?')) return;
     
     try {
-      await apiService.deleteComment(postId!, commentId);
+      // Mock delete comment - UI only
+      await new Promise(resolve => setTimeout(resolve, 300));
       setComments(comments.filter(c => c.commentId !== commentId));
       setPost({ ...post, commentCount: Math.max(0, (post.commentCount || 0) - 1) });
     } catch (err) {
@@ -87,7 +99,8 @@ export function PostViewPage() {
 
   const handlePurchase = async () => {
     try {
-      await apiService.purchasePost(postId!);
+      // Mock purchase - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
       setPost({ ...post, hasAccess: true });
     } catch (err) {
       console.error("Failed to purchase post", err);

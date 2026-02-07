@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { authService } from "../../services/auth.service";
 import "../../styles/auth-flow.css";
 
 type ResetStepOneProps = {
@@ -33,14 +32,11 @@ export default function ResetStepOne({ onSendCode, onBack }: ResetStepOneProps) 
     setLoading(true);
 
     try {
-      await authService.forgotPassword(email);
+      // Mock send code - UI only
+      await new Promise(resolve => setTimeout(resolve, 1000));
       onSendCode(email);
     } catch (err: any) {
-      if (err.code === "UserNotFoundException") {
-        setError("Email not found");
-      } else {
-        setError(err.message || "Failed to send code");
-      }
+      setError("Failed to send code");
     } finally {
       setLoading(false);
     }

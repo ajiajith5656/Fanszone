@@ -1,28 +1,66 @@
 /* Feed View */
 .feed-view {
-  flex: 1;
-  overflow-y: auto;
-  padding-bottom: 80px;
-  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
 }
 
 .feed-search {
   display: flex;
+  align-items: center;
   gap: 8px;
-  padding: 16px 20px;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  position: sticky;
-  top: 60px;
-  z-index: 90;
+  padding: 12px 16px;
+  margin: 0;
+}
+
+.feed-search .search-input {
+  flex: 1;
+  height: 42px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: #f6f2ff;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.feed-search .search-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.feed-search .search-input:focus {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.feed-search .search-btn {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: #f6f2ff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.feed-search .search-btn:active {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .posts-container {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 16px 20px;
+  padding: 16px;
 }
 
 .loading-more {
@@ -36,7 +74,7 @@
 .post-card {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
   animation: slideUp 0.3s ease;
 }

@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { useAuth } from "../../context/AuthContext";
-import { apiService } from "../../services/api.service";
 import "../../styles/auth-flow.css";
 import "../../styles/image-upload.css";
 
@@ -81,15 +80,13 @@ export default function ProfileImagesStep({
     setUploading(true);
 
     try {
-      // Upload images to backend
-      for (let i = 0; i < images.length; i++) {
-        await apiService.uploadProfileImage(images[i], i);
-      }
+      // Mock upload - UI only
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       updateSignupData({ images });
       onNext();
     } catch (err: any) {
-      setError(err.message || "Failed to upload images. Please try again");
+      setError("Failed to upload images. Please try again");
     } finally {
       setUploading(false);
     }

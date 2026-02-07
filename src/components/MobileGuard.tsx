@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
-const MOBILE_MAX_WIDTH = 600;
+const MOBILE_MAX_WIDTH = 767;
 
 type MobileGuardProps = {
   children: ReactNode;
@@ -30,9 +30,12 @@ export default function MobileGuard({ children }: MobileGuardProps) {
   if (!isMobile) {
     return (
       <div style={styles.block}>
-        <h1>Mobile Only</h1>
-        <p>Please open Mallu Cupid on a phone-sized screen.</p>
-        <span>Tablets and desktops are not supported yet.</span>
+        <div style={styles.glow}></div>
+        <div style={styles.content}>
+          <h1 style={styles.title}>📱 Mobile Only</h1>
+          <p style={styles.message}>Please view Mallu Cupid on a mobile device.</p>
+          <span style={styles.hint}>This app is optimized for mobile screens only.</span>
+        </div>
       </div>
     );
   }
@@ -43,14 +46,48 @@ export default function MobileGuard({ children }: MobileGuardProps) {
 const styles = {
   block: {
     height: "100vh",
-    background: "#08090c",
-    color: "#f2f2f2",
+    background: "radial-gradient(circle at top, #2a0c3f 0%, #090a0f 52%, #050508 100%)",
+    color: "#f6f2ff",
     display: "flex",
     flexDirection: "column" as const,
     alignItems: "center",
     justifyContent: "center",
     textAlign: "center" as const,
-    padding: 24,
-    gap: 12,
+    padding: "40px",
+    position: "relative" as const,
+    overflow: "hidden" as const,
+  },
+  glow: {
+    position: "absolute" as const,
+    width: "460px",
+    height: "460px",
+    borderRadius: "50%",
+    background: "conic-gradient(from 120deg, #ff9fc5, #ff4d6d, #ff6b9d, #ff9fc5)",
+    filter: "blur(90px)",
+    opacity: 0.25,
+    top: "-220px",
+    right: "-180px",
+  },
+  content: {
+    position: "relative" as const,
+    zIndex: 1,
+    maxWidth: "400px",
+  },
+  title: {
+    fontSize: "32px",
+    fontWeight: "700",
+    margin: "0 0 16px",
+    color: "#f6f2ff",
+  },
+  message: {
+    fontSize: "18px",
+    margin: "0 0 12px",
+    opacity: 0.9,
+    lineHeight: "1.5",
+  },
+  hint: {
+    fontSize: "14px",
+    opacity: 0.6,
+    display: "block",
   },
 };

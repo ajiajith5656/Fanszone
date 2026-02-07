@@ -5,11 +5,7 @@ import { useAuth } from "./context/AuthContext";
 import LandingPage from "./features/auth/LandingPage";
 import LoginPage from "./features/auth/LoginPage";
 import SignupStepOne from "./features/auth/SignupStepOne";
-import SignupEmailStep from "./features/auth/SignupEmailStep";
 import SignupOtp from "./features/auth/SignupOtp";
-import LookingForStep from "./features/auth/LookingForStep";
-import ProfileImagesStep from "./features/auth/ProfileImagesStep";
-import VerificationStep from "./features/auth/VerificationStep";
 import ResetStepOne from "./features/auth/ResetStepOne";
 import ResetOtp from "./features/auth/ResetOtp";
 import ResetNewPassword from "./features/auth/ResetNewPassword";
@@ -96,17 +92,8 @@ export default function App() {
           path="/signup"
           element={
             <SignupStepOne
-              onNext={() => navigateTo("/signup/email")}
+              onNext={() => navigateTo("/signup/otp")}
               onBack={() => navigateTo("/login")}
-            />
-          }
-        />
-        <Route
-          path="/signup/email"
-          element={
-            <SignupEmailStep
-              onSendCode={() => navigateTo("/signup/otp")}
-              onBack={() => navigateTo("/signup")}
             />
           }
         />
@@ -114,36 +101,8 @@ export default function App() {
           path="/signup/otp"
           element={
             <SignupOtp
-              onConfirm={() => navigateTo("/signup/looking-for")}
-              onBack={() => navigateTo("/signup/email")}
-            />
-          }
-        />
-        <Route
-          path="/signup/looking-for"
-          element={
-            <LookingForStep
-              onNext={() => navigateTo("/signup/images")}
-              onBack={() => navigateTo("/signup/otp")}
-            />
-          }
-        />
-        <Route
-          path="/signup/images"
-          element={
-            <ProfileImagesStep
-              onNext={() => navigateTo("/signup/verification")}
-              onBack={() => navigateTo("/signup/looking-for")}
-            />
-          }
-        />
-        <Route
-          path="/signup/verification"
-          element={
-            <VerificationStep
-              onNext={() => navigateTo("/dashboard")}
-              onSkip={() => navigateTo("/dashboard")}
-              onBack={() => navigateTo("/signup/images")}
+              onConfirm={() => navigateTo("/dashboard")}
+              onBack={() => navigateTo("/signup")}
             />
           }
         />

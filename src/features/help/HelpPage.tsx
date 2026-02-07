@@ -71,7 +71,7 @@ export const HelpPage: React.FC = () => {
     {
       question: "Is my data secure?",
       answer:
-        "Yes, we use AWS Cognito for authentication and encryption for all data. We never share your personal information with third parties without consent.",
+        "Yes, we use industry-standard encryption and secure authentication for all data. We never share your personal information with third parties without consent.",
     },
     {
       question: "How much does a subscription cost?",

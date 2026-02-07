@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { apiService } from '../../services/api.service';
 import '../../styles/post-content.css';
 
 export function PostContentPage() {
@@ -30,19 +29,23 @@ export function PostContentPage() {
 
   const loadPost = async () => {
     try {
-      const response = await apiService.getPostById(postId!);
-      const post = response.data;
+      // Mock load post - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const mockPost = {
+        description: 'Sample post description',
+        mediaType: 'none',
+        accessType: 'free',
+        price: 0,
+        mood: ''
+      };
       setFormData({
-        description: post.description || '',
+        description: mockPost.description || '',
         mediaFiles: [],
-        mediaType: post.mediaType || 'none',
-        accessType: post.accessType || 'free',
-        price: post.price?.toString() || '',
-        mood: post.mood || ''
+        mediaType: mockPost.mediaType || 'none',
+        accessType: mockPost.accessType || 'free',
+        price: mockPost.price?.toString() || '',
+        mood: mockPost.mood || ''
       });
-      if (post.mediaUrl) {
-        setMediaPreviewUrls([post.mediaUrl]);
-      }
     } catch (err) {
       console.error("Failed to load post", err);
     } finally {
@@ -103,26 +106,8 @@ export function PostContentPage() {
 
     setLoading(true);
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('description', formData.description);
-      formDataToSend.append('accessType', formData.accessType);
-      formDataToSend.append('mood', formData.mood);
-      
-      if (formData.accessType === 'paid') {
-        formDataToSend.append('price', formData.price);
-      }
-
-      if (formData.mediaFiles.length > 0) {
-        formDataToSend.append('media', formData.mediaFiles[0]);
-        formDataToSend.append('mediaType', formData.mediaType);
-      }
-
-      if (isEditMode) {
-        await apiService.updatePost(postId!, formDataToSend);
-      } else {
-        await apiService.createPost(formDataToSend);
-      }
-
+      // Mock save post - UI only
+      await new Promise(resolve => setTimeout(resolve, 1000));
       navigate('/feed');
     } catch (err) {
       console.error("Failed to save post", err);
@@ -137,7 +122,8 @@ export function PostContentPage() {
 
     setLoading(true);
     try {
-      await apiService.deletePost(postId!);
+      // Mock delete - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
       navigate('/feed');
     } catch (err) {
       console.error("Failed to delete post", err);

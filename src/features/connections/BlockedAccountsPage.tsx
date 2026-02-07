@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../../services/api.service';
 import '../../styles/connections-pages.css';
 
 export function BlockedAccountsPage() {
@@ -14,8 +13,9 @@ export function BlockedAccountsPage() {
 
   const loadBlockedUsers = async () => {
     try {
-      const response = await apiService.getBlockedUsers();
-      setBlockedUsers(response.data.blockedUsers || []);
+      // Mock blocked users - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setBlockedUsers([]);
     } catch (err) {
       console.error("Failed to load blocked users", err);
     } finally {
@@ -25,7 +25,8 @@ export function BlockedAccountsPage() {
 
   const handleUnblock = async (userId: string) => {
     try {
-      await apiService.unblockUser(userId);
+      // Mock unblock - UI only
+      await new Promise(resolve => setTimeout(resolve, 300));
       setBlockedUsers(blockedUsers.filter(u => u.userId !== userId));
     } catch (err) {
       console.error("Failed to unblock user", err);

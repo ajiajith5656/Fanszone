@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { authService } from "../../services/auth.service";
 import "../../styles/auth-flow.css";
 
 type SignupOtpProps = {
@@ -40,21 +39,14 @@ export default function SignupOtp({ onConfirm, onBack }: SignupOtpProps) {
     setLoading(true);
 
     try {
-      await authService.verifyEmail({ email: userEmail, code });
+      // Mock verification - UI only
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setSuccess(true);
       setTimeout(() => {
         onConfirm();
       }, 1000);
     } catch (err: any) {
-      if (err.code === "CodeMismatchException") {
-        setError("Invalid code");
-      } else if (err.code === "ExpiredCodeException") {
-        setError("Code expired");
-      } else if (err.code === "LimitExceededException") {
-        setError("Too many attempts. Try again later");
-      } else {
-        setError(err.message || "Verification failed");
-      }
+      setError("Verification failed");
     } finally {
       setLoading(false);
     }
@@ -67,11 +59,12 @@ export default function SignupOtp({ onConfirm, onBack }: SignupOtpProps) {
     setLoading(true);
 
     try {
-      await authService.resendCode(userEmail);
+      // Mock resend - UI only
+      await new Promise(resolve => setTimeout(resolve, 1000));
       setTimer(30);
       setCanResend(false);
     } catch (err: any) {
-      setError(err.message || "Failed to resend code");
+      setError("Failed to resend code");
     } finally {
       setLoading(false);
     }
@@ -108,7 +101,7 @@ export default function SignupOtp({ onConfirm, onBack }: SignupOtpProps) {
           onClick={handleConfirm}
           disabled={loading || success}
         >
-          {loading ? "Verifying..." : "Confirm"}
+          {loading ? "Verifying..." : "Onboard Now"}
         </button>
 
         {!canResend ? (

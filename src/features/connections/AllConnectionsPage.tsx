@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../../services/api.service';
 import '../../styles/connections-pages.css';
 
 export function AllConnectionsPage() {
@@ -18,9 +17,10 @@ export function AllConnectionsPage() {
 
   const loadConnections = async () => {
     try {
-      const response = await apiService.getConnections(page, 20);
-      setConnections(prev => [...prev, ...(response.data.connections || [])]);
-      setHasMore(response.data.hasMore || false);
+      // Mock connections - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setConnections([]);
+      setHasMore(false);
     } catch (err) {
       console.error("Failed to load connections", err);
     } finally {
@@ -33,8 +33,9 @@ export function AllConnectionsPage() {
     
     setIsSearching(true);
     try {
-      const response = await apiService.searchConnections(searchQuery);
-      setConnections(response.data.connections || []);
+      // Mock search - UI only
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setConnections([]);
       setHasMore(false);
     } catch (err) {
       console.error("Search failed", err);
